@@ -1,7 +1,7 @@
 import time
 
 from adafruit_circuitplayground.express import cpx
-import adafruit_fancyled.adafruit_fancyled as fancy
+import adafruit_fancyled.adafruit_fancyled as fancy  # pylint: disable=unused-import
  
 allowReset = 1 #set to 0 to disable user reset with the power button once started
                 #if set to 0, wait until end of game, turn off all toggles, then turn off power
