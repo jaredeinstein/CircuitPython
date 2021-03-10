@@ -1,29 +1,13 @@
-# The MIT License (MIT)
+# SPDX-FileCopyrightText: 2018 Tony DiCola for Adafruit Industries
+# SPDX-FileCopyrightText: 2018 ladyada for Adafruit Industries
 #
-# Copyright (c) 2018 Tony DiCola, ladyada for Adafruit Industries
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
+# SPDX-License-Identifier: MIT
+
 """
 `adafruit_pcd8544`
 ====================================================
 
-A display control library for Nokia PCD8544 monochrome displays
+A display control library for Nokia 5110 PCD8544 monochrome displays
 
 * Author(s): ladyada
 
@@ -32,7 +16,7 @@ Implementation Notes
 
 **Hardware:**
 
-* `Nokia PCD8544 Display <https://www.adafruit.com/product/338>`_
+* `Nokia 5110 PCD8544 Display <https://www.adafruit.com/product/338>`_
 
 **Software and Dependencies:**
 
@@ -46,12 +30,13 @@ Implementation Notes
 import time
 from micropython import const
 from adafruit_bus_device import spi_device
+
 try:
     import framebuf
 except ImportError:
     import adafruit_framebuf as framebuf
 
-__version__ = "1.0.1"
+__version__ = "1.2.5"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_PCD8544.git"
 
 _LCDWIDTH = const(84)
@@ -74,10 +59,20 @@ _PCD8544_SETVOP = const(0x80)
 
 class PCD8544(framebuf.FrameBuffer):
     """Nokia 5110/3310 PCD8544-based LCD display."""
+
     # pylint: disable=too-many-instance-attributes
 
-    def __init__(self, spi, dc_pin, cs_pin, reset_pin=None, *,
-                 contrast=80, bias=4, baudrate=1000000):
+    def __init__(
+        self,
+        spi,
+        dc_pin,
+        cs_pin,
+        reset_pin=None,
+        *,
+        contrast=80,
+        bias=4,
+        baudrate=1000000
+    ):
         self._dc_pin = dc_pin
         dc_pin.switch_to_output(value=False)
 
@@ -112,7 +107,7 @@ class PCD8544(framebuf.FrameBuffer):
         """Send a command to the SPI device"""
         self._dc_pin.value = 0
         with self.spi_device as spi:
-            spi.write(bytearray([cmd])) # pylint: disable=no-member
+            spi.write(bytearray([cmd]))  # pylint: disable=no-member
 
     def extended_command(self, cmd):
         """Send a command in extended mode"""
@@ -129,7 +124,7 @@ class PCD8544(framebuf.FrameBuffer):
         self.write_cmd(_PCD8544_SETXADDR)
         self._dc_pin.value = True
         with self.spi_device as spi:
-            spi.write(self.buffer) # pylint: disable=no-member
+            spi.write(self.buffer)  # pylint: disable=no-member
 
     @property
     def invert(self):
@@ -154,7 +149,7 @@ class PCD8544(framebuf.FrameBuffer):
     @contrast.setter
     def contrast(self, val):
         """Set contrast to specified value (should be 0-127)."""
-        self._contrast = max(0, min(val, 0x7f)) # Clamp to values 0-0x7f
+        self._contrast = max(0, min(val, 0x7F))  # Clamp to values 0-0x7f
         self.extended_command(_PCD8544_SETVOP | self._contrast)
 
     @property

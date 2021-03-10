@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2021 ladyada for Adafruit Industries
+# SPDX-License-Identifier: MIT
+
 """Simple test for I2C RGB character LCD shield kit"""
 import time
 import board
@@ -54,7 +57,7 @@ time.sleep(5)
 lcd.blink = False
 lcd.clear()
 # Create message to scroll
-scroll_msg = '<-- Scroll'
+scroll_msg = "<-- Scroll"
 lcd.message = scroll_msg
 # Scroll to the left
 for i in range(len(scroll_msg)):

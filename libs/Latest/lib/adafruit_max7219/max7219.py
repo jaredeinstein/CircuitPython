@@ -1,24 +1,8 @@
-# The MIT License (MIT)
+# SPDX-FileCopyrightText: 2016 Philip R. Moyer  for Adafruit Industries
+# SPDX-FileCopyrightText: 2016 Radomir Dopieralski for Adafruit Industries
 #
-# Copyright (c) 2016 Philip R. Moyer and Radomir Dopieralski for Adafruit Industries.
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
+# SPDX-License-Identifier: MIT
+
 """
 `adafruit_max7219.max7219` - MAX7219 LED Matrix/Digit Display Driver
 ========================================================================
@@ -59,7 +43,7 @@ from adafruit_bus_device import spi_device
 from micropython import const
 import adafruit_framebuf as framebuf
 
-__version__ = "1.2.0"
+__version__ = "1.3.4"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_MAX7219.git"
 
 # register definitions
@@ -79,14 +63,17 @@ class MAX7219:
     :param polarity: for SPIDevice polarity (default 0)
     :param phase: for SPIDevice phase (default 0)
     """
-    def __init__(self, width, height, spi, cs, *,
-                 baudrate=8000000, polarity=0, phase=0):
+
+    def __init__(
+        self, width, height, spi, cs, *, baudrate=8000000, polarity=0, phase=0
+    ):
 
         self._chip_select = cs
         self._chip_select.direction = digitalio.Direction.OUTPUT
 
-        self._spi_device = spi_device.SPIDevice(spi, cs, baudrate=baudrate,
-                                                polarity=polarity, phase=phase)
+        self._spi_device = spi_device.SPIDevice(
+            spi, cs, baudrate=baudrate, polarity=polarity, phase=phase
+        )
 
         self._buffer = bytearray((height // 8) * width)
         self.framebuf = framebuf.FrameBuffer1(self._buffer, width, height)
@@ -98,7 +85,6 @@ class MAX7219:
 
     def init_display(self):
         """Must be implemented by derived class (``matrices``, ``bcddigits``)"""
-        pass
 
     def brightness(self, value):
         """
@@ -143,7 +129,7 @@ class MAX7219:
     def write_cmd(self, cmd, data):
         # pylint: disable=no-member
         """Writes a command to spi device."""
-        #print('cmd {} data {}'.format(cmd,data))
+        # print('cmd {} data {}'.format(cmd,data))
         self._chip_select.value = False
         with self._spi_device as my_spi_device:
             my_spi_device.write(bytearray([cmd, data]))

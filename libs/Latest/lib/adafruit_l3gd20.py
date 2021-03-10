@@ -1,24 +1,7 @@
-# The MIT License (MIT)
+# SPDX-FileCopyrightText: 2018 Michael McWethy for Adafruit Industries
 #
-# Copyright (c) 2018 Michael McWethy for Adafruit Industries
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
+# SPDX-License-Identifier: MIT
+
 """
 `adafruit_l3gd20`
 ====================================================
@@ -48,23 +31,29 @@ Implementation Notes
 
 # imports
 
-__version__ = "2.0.2"
+__version__ = "2.3.4"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_l3gd20.git"
 
 
 from micropython import const
 from adafruit_register.i2c_struct import Struct
+
 try:
     from struct import unpack
 except ImportError:
     from ustruct import unpack
 
-__version__ = "2.0.2"
+__version__ = "2.3.4"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_L3GD20.git"
 
 L3DS20_RANGE_250DPS = const(0)
 L3DS20_RANGE_500DPS = const(1)
 L3DS20_RANGE_2000DPS = const(2)
+
+L3DS20_RATE_100HZ = const(0x00)
+L3DS20_RATE_200HZ = const(0x40)
+L3DS20_RATE_400HZ = const(0x80)
+L3DS20_RATE_800HZ = const(0xC0)
 
 _L3GD20_REGISTER_CTRL_REG1 = const(0x20)
 _L3GD20_REGISTER_CTRL_REG4 = const(0x23)
@@ -78,9 +67,9 @@ _ID_REGISTER = const(0x0F)
 _L3GD20_CHIP_ID = const(0xD4)
 _L3GD20H_CHIP_ID = const(0xD7)
 
-_L3GD20_SENSITIVITY_250DPS = 0.00875      ## Roughly 22/256 for fixed point match
-_L3GD20_SENSITIVITY_500DPS = 0.0175       ## Roughly 45/256
-_L3GD20_SENSITIVITY_2000DPS = 0.070        ## Roughly 18/256
+_L3GD20_SENSITIVITY_250DPS = 0.00875  ## Roughly 22/256 for fixed point match
+_L3GD20_SENSITIVITY_500DPS = 0.0175  ## Roughly 45/256
+_L3GD20_SENSITIVITY_2000DPS = 0.070  ## Roughly 18/256
 
 
 # pylint: disable=no-member
@@ -90,19 +79,24 @@ class L3GD20:
 
     :param int rng: a range value one of L3DS20_RANGE_250DPS (default), L3DS20_RANGE_500DPS, or
         L3DS20_RANGE_2000DPS
+
+    :param int rate: a rate value one of L3DS20_RATE_100HZ (default), L3DS20_RATE_200HZ,
+        L3DS20_RATE_400HZ, or L3DS20_RATE_800HZ
     """
 
-    def __init__(self, rng=L3DS20_RANGE_250DPS):
+    def __init__(self, rng=L3DS20_RANGE_250DPS, rate=L3DS20_RATE_100HZ):
         chip_id = self.read_register(_ID_REGISTER)
-        if chip_id != _L3GD20_CHIP_ID and chip_id != _L3GD20H_CHIP_ID:
-            raise RuntimeError("bad chip id (%x != %x or %x)" %
-                               (chip_id, _L3GD20_CHIP_ID, _L3GD20H_CHIP_ID))
+        if chip_id not in (_L3GD20_CHIP_ID, _L3GD20H_CHIP_ID):
+            raise RuntimeError(
+                "bad chip id (%x != %x or %x)"
+                % (chip_id, _L3GD20_CHIP_ID, _L3GD20H_CHIP_ID)
+            )
 
-        if rng != L3DS20_RANGE_250DPS and \
-           rng != L3DS20_RANGE_500DPS and \
-           rng != L3DS20_RANGE_2000DPS:
-            raise ValueError("Range value must be one of L3DS20_RANGE_250DPS, "
-                             "L3DS20_RANGE_500DPS, or L3DS20_RANGE_2000DPS")
+        if rng not in (L3DS20_RANGE_250DPS, L3DS20_RANGE_500DPS, L3DS20_RANGE_2000DPS):
+            raise ValueError(
+                "Range value must be one of L3DS20_RANGE_250DPS, "
+                "L3DS20_RANGE_500DPS, or L3DS20_RANGE_2000DPS"
+            )
 
         # Set CTRL_REG1 (0x20)
         # ====================================================================
@@ -116,7 +110,7 @@ class L3GD20:
         #     0  XEN       X-axis enable (0 = disabled, 1 = enabled)
 
         # Switch to normal mode and enable all three channels
-        self.write_register(_L3GD20_REGISTER_CTRL_REG1, 0x0F)
+        self.write_register(_L3GD20_REGISTER_CTRL_REG1, rate | 0x0F)
 
         # Set CTRL_REG2 (0x21)
         # ====================================================================
@@ -186,7 +180,6 @@ class L3GD20:
         # Nothing to do ... keep default values
         # ------------------------------------------------------------------
 
-
     @property
     def gyro(self):
         """
@@ -194,7 +187,7 @@ class L3GD20:
         range selected
         """
         raw = self.gyro_raw
-        return tuple(self.scale*v for v in raw)
+        return tuple(self.scale * v for v in raw)
 
 
 class L3GD20_I2C(L3GD20):
@@ -207,14 +200,17 @@ class L3GD20_I2C(L3GD20):
     :param address: the optional device address, 0x68 is the default address
     """
 
-    gyro_raw = Struct(_L3GD20_REGISTER_OUT_X_L_X80, '<hhh')
+    gyro_raw = Struct(_L3GD20_REGISTER_OUT_X_L_X80, "<hhh")
     """Gives the raw gyro readings, in units of rad/s."""
 
-    def __init__(self, i2c, rng=L3DS20_RANGE_250DPS, address=0x6B):
-        import adafruit_bus_device.i2c_device as i2c_device
+    def __init__(
+        self, i2c, rng=L3DS20_RANGE_250DPS, address=0x6B, rate=L3DS20_RATE_100HZ
+    ):
+        import adafruit_bus_device.i2c_device as i2c_device  # pylint: disable=import-outside-toplevel
+
         self.i2c_device = i2c_device.I2CDevice(i2c, address)
         self.buffer = bytearray(2)
-        super().__init__(rng)
+        super().__init__(rng, rate)
 
     def write_register(self, register, value):
         """
@@ -236,9 +232,9 @@ class L3GD20_I2C(L3GD20):
         """
         self.buffer[0] = register
         with self.i2c_device as i2c:
-            i2c.write(self.buffer, end=1, stop=False)
-            i2c.readinto(self.buffer, start=1)
+            i2c.write_then_readinto(self.buffer, self.buffer, out_end=1, in_start=1)
         return self.buffer[1]
+
 
 class L3GD20_SPI(L3GD20):
     """
@@ -250,12 +246,21 @@ class L3GD20_SPI(L3GD20):
         L3DS20_RANGE_2000DPS
     :param baudrate: spi baud rate default is 100000
     """
-    def __init__(self, spi_busio, cs, rng=L3DS20_RANGE_250DPS, baudrate=100000):
-        import adafruit_bus_device.spi_device as spi_device
+
+    def __init__(
+        self,
+        spi_busio,
+        cs,
+        rng=L3DS20_RANGE_250DPS,
+        baudrate=100000,
+        rate=L3DS20_RATE_100HZ,
+    ):  # pylint: disable=too-many-arguments
+        import adafruit_bus_device.spi_device as spi_device  # pylint: disable=import-outside-toplevel
+
         self._spi = spi_device.SPIDevice(spi_busio, cs, baudrate=baudrate)
         self._spi_bytearray1 = bytearray(1)
         self._spi_bytearray6 = bytearray(6)
-        super().__init__(rng)
+        super().__init__(rng, rate)
 
     def write_register(self, register, value):
         """
@@ -301,4 +306,4 @@ class L3GD20_SPI(L3GD20):
         """Gives the raw gyro readings, in units of rad/s."""
         buffer = self._spi_bytearray6
         self.read_bytes(_L3GD20_REGISTER_OUT_X_L_X40, buffer)
-        return unpack('<hhh', buffer)
+        return unpack("<hhh", buffer)

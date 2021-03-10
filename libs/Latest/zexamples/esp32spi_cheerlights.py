@@ -1,13 +1,16 @@
+# SPDX-FileCopyrightText: 2019 ladyada for Adafruit Industries
+# SPDX-License-Identifier: MIT
+
 import time
 import board
 import busio
 from digitalio import DigitalInOut
 
-from adafruit_esp32spi import adafruit_esp32spi
-from adafruit_esp32spi import adafruit_esp32spi_wifimanager
-
 import neopixel
 import adafruit_fancyled.adafruit_fancyled as fancy
+
+from adafruit_esp32spi import adafruit_esp32spi
+from adafruit_esp32spi import adafruit_esp32spi_wifimanager
 
 # Get wifi details and more from a secrets.py file
 try:
@@ -27,9 +30,11 @@ esp32_reset = DigitalInOut(board.D5)
 spi = busio.SPI(board.SCK, board.MOSI, board.MISO)
 esp = adafruit_esp32spi.ESP_SPIcontrol(spi, esp32_cs, esp32_ready, esp32_reset)
 """Use below for Most Boards"""
-status_light = neopixel.NeoPixel(board.NEOPIXEL, 1, brightness=0.2) # Uncomment for Most Boards
+status_light = neopixel.NeoPixel(
+    board.NEOPIXEL, 1, brightness=0.2
+)  # Uncomment for Most Boards
 """Uncomment below for ItsyBitsy M4"""
-#status_light = dotstar.DotStar(board.APA102_SCK, board.APA102_MOSI, 1, brightness=0.2)
+# status_light = dotstar.DotStar(board.APA102_SCK, board.APA102_MOSI, 1, brightness=0.2)
 wifi = adafruit_esp32spi_wifimanager.ESPSPI_WiFiManager(esp, secrets, status_light)
 
 # neopixels
@@ -60,7 +65,7 @@ while True:
         color = int(value[1:], 16)
         red = color >> 16 & 0xFF
         green = color >> 8 & 0xFF
-        blue = color& 0xFF
+        blue = color & 0xFF
         gamma_corrected = fancy.gamma_adjust(fancy.CRGB(red, green, blue)).pack()
 
         pixels.fill(gamma_corrected)

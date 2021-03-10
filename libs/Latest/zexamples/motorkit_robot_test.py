@@ -1,10 +1,13 @@
+# SPDX-FileCopyrightText: 2021 ladyada for Adafruit Industries
+# SPDX-License-Identifier: MIT
+
 # Simple two DC motor robot class usage example.
 # Author: Tony DiCola, Chris Anderron
 # License: MIT License https://opensource.org/licenses/MIT
 import time
 
-# Import the Robot.py file (must be in the same directory as this file!).
-import Robot
+# Import the motorkit_robot.py file (must be in the same directory as this file!).
+import motorkit_robot
 
 
 # Set the trim offset for each motor (left and right).  This is a value that
@@ -24,7 +27,7 @@ RIGHT_TRIM = 0
 
 # Create an instance of the robot with the specified trim values.
 
-robot = Robot.Robot(left_trim=LEFT_TRIM, right_trim=RIGHT_TRIM)
+robot = motorkit_robot.Robot(left_trim=LEFT_TRIM, right_trim=RIGHT_TRIM)
 
 # Now move the robot around!
 # Each call below takes two parameters:
@@ -40,7 +43,7 @@ robot.left(0.5, 1)
 robot.right(0.5, 1)
 robot.steer(0.5, 0.2)
 time.sleep(3)
-robot.stop()      # Stop the robot from moving.
+robot.stop()  # Stop the robot from moving.
 
 
 # That's it!  Note that on exit the robot will automatically stop moving.

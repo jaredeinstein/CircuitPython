@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2021 ladyada for Adafruit Industries
+# SPDX-License-Identifier: MIT
+
 import time
 import board
 import busio
@@ -17,5 +20,7 @@ bmp.pressure_oversampling = 8
 bmp.temperature_oversampling = 2
 
 while True:
-    print("Pressure: {:6.1f}  Temperature: {:5.2f}".format(bmp.pressure, bmp.temperature))
+    print(
+        "Pressure: {:6.4f}  Temperature: {:5.2f}".format(bmp.pressure, bmp.temperature)
+    )
     time.sleep(1)

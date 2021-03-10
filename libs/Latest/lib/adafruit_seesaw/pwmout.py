@@ -1,31 +1,21 @@
-# The MIT License (MIT)
+# SPDX-FileCopyrightText: 2017 Dean Miller for Adafruit Industries
 #
-# Copyright (c) 2017 Dean Miller for Adafruit Industries
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
+# SPDX-License-Identifier: MIT
+
 # pylint: disable=missing-docstring,invalid-name,too-many-public-methods,too-few-public-methods
 
-__version__ = "1.3.0"
+"""
+`adafruit_seesaw.pwmout`
+====================================================
+"""
+
+__version__ = "1.7.2"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_seesaw.git"
 
+
 class PWMOut:
-    """A single seesaw channel that matches the :py:class:`~pulseio.PWMOut` API."""
+    """A single seesaw channel that matches the :py:class:`~pwmio.PWMOut` API."""
+
     def __init__(self, seesaw, pin):
         self._seesaw = seesaw
         self._pin = pin
@@ -34,7 +24,7 @@ class PWMOut:
 
     @property
     def frequency(self):
-        """The overall PWM frequency in herz."""
+        """The overall PWM frequency in Hertz."""
         return self._frequency
 
     @frequency.setter
@@ -52,7 +42,7 @@ class PWMOut:
 
     @duty_cycle.setter
     def duty_cycle(self, value):
-        if not 0 <= value <= 0xffff:
+        if not 0 <= value <= 0xFFFF:
             raise ValueError("Must be 0 to 65535")
         self._seesaw.analog_write(self._pin, value)
         self._dc = value

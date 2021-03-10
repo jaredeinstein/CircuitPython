@@ -1,24 +1,7 @@
-# The MIT License (MIT)
+# SPDX-FileCopyrightText: 2019 Scott Shawcroft for Adafruit Industries
 #
-# Copyright (c) 2019 Scott Shawcroft for Adafruit Industries LLC
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
+# SPDX-License-Identifier: MIT
+
 """
 `adafruit_bitmap_font.bdf`
 ====================================================
@@ -40,14 +23,16 @@ Implementation Notes
 """
 
 import gc
-from displayio import Glyph
+from fontio import Glyph
 from .glyph_cache import GlyphCache
 
-__version__ = "1.0.1"
+__version__ = "1.3.6"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_Bitmap_Font.git"
+
 
 class BDF(GlyphCache):
     """Loads glyphs from a BDF file in the given bitmap_class."""
+
     def __init__(self, f, bitmap_class):
         super().__init__()
         self.file = f
@@ -61,6 +46,41 @@ class BDF(GlyphCache):
         self.point_size = None
         self.x_resolution = None
         self.y_resolution = None
+        self._ascent = None
+        self._descent = None
+
+    @property
+    def descent(self):
+        """The number of pixels below the baseline of a typical descender"""
+        if self._descent is None:
+            self.file.seek(0)
+            while True:
+                line = self.file.readline()
+                if not line:
+                    break
+
+                if line.startswith(b"FONT_DESCENT "):
+                    self._descent = int(line.split()[1])
+                    break
+
+        return self._descent
+
+    @property
+    def ascent(self):
+        """The number of pixels above the baseline of a typical ascender"""
+        if self._ascent is None:
+            self.file.seek(0)
+            while True:
+                line = self.file.readline()
+                line = str(line, "utf-8")
+                if not line:
+                    break
+
+                if line.startswith("FONT_ASCENT "):
+                    self._ascent = int(line.split()[1])
+                    break
+
+        return self._ascent
 
     def get_bounding_box(self):
         """Return the maximum glyph size as a 4-tuple of: width, height, x_offset, y_offset"""
@@ -86,7 +106,20 @@ class BDF(GlyphCache):
         current_info = {}
         current_y = 0
         rounded_x = 1
-        total_remaining = len(code_points)
+        if isinstance(code_points, int):
+            remaining = set()
+            remaining.add(code_points)
+        elif isinstance(code_points, str):
+            remaining = set(ord(c) for c in code_points)
+        elif isinstance(code_points, set):
+            remaining = code_points
+        else:
+            remaining = set(code_points)
+        for code_point in remaining.copy():
+            if code_point in self._glyphs and self._glyphs[code_point]:
+                remaining.remove(code_point)
+        if not remaining:
+            return
 
         x, _, _, _ = self.get_bounding_box()
 
@@ -103,23 +136,26 @@ class BDF(GlyphCache):
                 pass
             elif line.startswith(b"STARTCHAR"):
                 # print(lineno, line.strip())
-                #_, character_name = line.split()
+                # _, character_name = line.split()
                 character = True
             elif line.startswith(b"ENDCHAR"):
                 character = False
                 if desired_character:
                     bounds = current_info["bounds"]
                     shift = current_info["shift"]
-                    self._glyphs[code_point] = Glyph(current_info["bitmap"],
-                                                     0,
-                                                     bounds[0],
-                                                     bounds[1],
-                                                     bounds[2],
-                                                     bounds[3],
-                                                     shift[0],
-                                                     shift[1])
                     gc.collect()
-                    if total_remaining == 0:
+                    self._glyphs[code_point] = Glyph(
+                        current_info["bitmap"],
+                        0,
+                        bounds[0],
+                        bounds[1],
+                        bounds[2],
+                        bounds[3],
+                        shift[0],
+                        shift[1],
+                    )
+                    remaining.remove(code_point)
+                    if not remaining:
                         return
                 desired_character = False
             elif line.startswith(b"BBX"):
@@ -143,11 +179,9 @@ class BDF(GlyphCache):
             elif line.startswith(b"ENCODING"):
                 _, code_point = line.split()
                 code_point = int(code_point)
-                if code_point == code_points or code_point in code_points:
-                    total_remaining -= 1
-                    if code_point not in self._glyphs or not self._glyphs[code_point]:
-                        desired_character = True
-                        current_info = {"bitmap": None, "bounds": None, "shift": None}
+                if code_point in remaining:
+                    desired_character = True
+                    current_info = {"bitmap": None, "bounds": None, "shift": None}
             elif line.startswith(b"DWIDTH"):
                 if desired_character:
                     _, shift_x, shift_y = line.split()
@@ -163,7 +197,7 @@ class BDF(GlyphCache):
                     start = current_y * width
                     x = 0
                     for i in range(rounded_x):
-                        val = (bits >> ((rounded_x-i-1)*8)) & 0xFF
+                        val = (bits >> ((rounded_x - i - 1) * 8)) & 0xFF
                         for j in range(7, -1, -1):
                             if x >= width:
                                 break
@@ -174,5 +208,5 @@ class BDF(GlyphCache):
                             x += 1
                     current_y += 1
             elif metadata:
-                #print(lineno, line.strip())
+                # print(lineno, line.strip())
                 pass

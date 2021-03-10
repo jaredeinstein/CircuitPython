@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2021 ladyada for Adafruit Industries
+# SPDX-License-Identifier: MIT
+
 from board import SCL, SDA
 import busio
 from adafruit_apds9960.apds9960 import APDS9960
@@ -7,6 +10,9 @@ i2c = busio.I2C(SCL, SDA)
 apds = APDS9960(i2c)
 apds.enable_proximity = True
 apds.enable_gesture = True
+
+# Uncomment and set the rotation if depending on how your sensor is mounted.
+# apds.rotation = 270 # 270 for CLUE
 
 while True:
     gesture = apds.gesture()

@@ -1,24 +1,7 @@
-# The MIT License (MIT)
+# SPDX-FileCopyrightText: 2017 Tony DiCola for Adafruit Industries
 #
-# Copyright (c) 2017 Tony DiCola for Adafruit Industries
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
+# SPDX-License-Identifier: MIT
+
 """
 `adafruit_vcnl4010`
 ====================================================
@@ -47,36 +30,34 @@ from micropython import const
 import adafruit_bus_device.i2c_device as i2c_device
 
 
-__version__ = "0.9.2"
+__version__ = "0.10.7"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_VCNL4010.git"
 
 
-# pylint: disable=bad-whitespace
 # Internal constants:
-_VCNL4010_I2CADDR_DEFAULT   = const(0x13)
-_VCNL4010_COMMAND           = const(0x80)
-_VCNL4010_PRODUCTID         = const(0x81)
-_VCNL4010_PROXRATE          = const(0x82)
-_VCNL4010_IRLED             = const(0x83)
-_VCNL4010_AMBIENTPARAMETER  = const(0x84)
-_VCNL4010_AMBIENTDATA       = const(0x85)
-_VCNL4010_PROXIMITYDATA     = const(0x87)
-_VCNL4010_INTCONTROL        = const(0x89)
-_VCNL4010_PROXINITYADJUST   = const(0x8A)
-_VCNL4010_INTSTAT           = const(0x8E)
-_VCNL4010_MODTIMING         = const(0x8F)
-_VCNL4010_MEASUREAMBIENT    = const(0x10)
-_VCNL4010_MEASUREPROXIMITY  = const(0x08)
-_VCNL4010_AMBIENTREADY      = const(0x40)
-_VCNL4010_PROXIMITYREADY    = const(0x20)
+_VCNL4010_I2CADDR_DEFAULT = const(0x13)
+_VCNL4010_COMMAND = const(0x80)
+_VCNL4010_PRODUCTID = const(0x81)
+_VCNL4010_PROXRATE = const(0x82)
+_VCNL4010_IRLED = const(0x83)
+_VCNL4010_AMBIENTPARAMETER = const(0x84)
+_VCNL4010_AMBIENTDATA = const(0x85)
+_VCNL4010_PROXIMITYDATA = const(0x87)
+_VCNL4010_INTCONTROL = const(0x89)
+_VCNL4010_PROXIMITYADJUST = const(0x8A)
+_VCNL4010_INTSTAT = const(0x8E)
+_VCNL4010_MODTIMING = const(0x8F)
+_VCNL4010_MEASUREAMBIENT = const(0x10)
+_VCNL4010_MEASUREPROXIMITY = const(0x08)
+_VCNL4010_AMBIENTREADY = const(0x40)
+_VCNL4010_PROXIMITYREADY = const(0x20)
 _VCNL4010_AMBIENT_LUX_SCALE = 0.25  # Lux value per 16-bit result value.
 
 # User-facing constants:
-FREQUENCY_3M125    = 3
-FREQUENCY_1M5625   = 2
-FREQUENCY_781K25   = 1
-FREQUENCY_390K625  = 0
-# pylint: enable=bad-whitespace
+FREQUENCY_3M125 = 3
+FREQUENCY_1M5625 = 2
+FREQUENCY_781K25 = 1
+FREQUENCY_390K625 = 0
 
 # Disable pylint's name warning as it causes too much noise.  Suffixes like
 # BE (big-endian) or mA (milli-amps) don't confirm to its conventions--by
@@ -98,7 +79,7 @@ class VCNL4010:
         # Verify chip ID.
         revision = self._read_u8(_VCNL4010_PRODUCTID)
         if (revision & 0xF0) != 0x20:
-            raise RuntimeError('Failed to find VCNL4010, check wiring!')
+            raise RuntimeError("Failed to find VCNL4010, check wiring!")
         self.led_current = 20
         self.frequency = FREQUENCY_390K625
         self._write_u8(_VCNL4010_INTCONTROL, 0x08)
@@ -107,17 +88,15 @@ class VCNL4010:
         # Read an 8-bit unsigned value from the specified 8-bit address.
         with self._device as i2c:
             self._BUFFER[0] = address & 0xFF
-            i2c.write(self._BUFFER, end=1, stop=False)
-            i2c.readinto(self._BUFFER, end=1)
-        return self._BUFFER[0]
+            i2c.write_then_readinto(self._BUFFER, self._BUFFER, out_end=1, in_start=1)
+        return self._BUFFER[1]
 
     def _read_u16BE(self, address):
         # Read a 16-bit big-endian unsigned value from the specified 8-bit address.
         with self._device as i2c:
             self._BUFFER[0] = address & 0xFF
-            i2c.write(self._BUFFER, end=1, stop=False)
-            i2c.readinto(self._BUFFER, end=2)
-        return (self._BUFFER[0] << 8) | self._BUFFER[1]
+            i2c.write_then_readinto(self._BUFFER, self._BUFFER, out_end=1, in_start=1)
+        return (self._BUFFER[1] << 8) | self._BUFFER[2]
 
     def _write_u8(self, address, val):
         # Write an 8-bit unsigned value to the specified 8-bit address.
@@ -220,6 +199,7 @@ class VCNL4010:
             result = self._read_u8(_VCNL4010_COMMAND)
             if result & _VCNL4010_AMBIENTREADY:
                 return self._read_u16BE(_VCNL4010_AMBIENTDATA)
+
     # pylint: enable=inconsistent-return-statements
 
     @property

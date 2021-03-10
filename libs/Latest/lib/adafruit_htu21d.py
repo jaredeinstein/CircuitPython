@@ -1,24 +1,6 @@
-# The MIT License (MIT)
+# SPDX-FileCopyrightText: 2018 ktown for Adafruit Industries
 #
-# Copyright (c) 2018 ktown for Adafruit Industries
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
+# SPDX-License-Identifier: MIT
 
 """
 `adafruit_htu21d`
@@ -49,17 +31,18 @@ try:
 except ImportError:
     import ustruct as struct
 
+import time
 from adafruit_bus_device.i2c_device import I2CDevice
 from micropython import const
 
-__version__ = "0.8.1"
+__version__ = "0.10.6"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_HTU21D.git"
 
-HUMIDITY = const(0xf5)
-TEMPERATURE = const(0xf3)
-_RESET = const(0xfe)
-_READ_USER1 = const(0xe7)
-_USER1_VAL = const(0x3a)
+HUMIDITY = const(0xF5)
+TEMPERATURE = const(0xF3)
+_RESET = const(0xFE)
+_READ_USER1 = const(0xE7)
+_USER1_VAL = const(0x3A)
 
 
 def _crc(data):
@@ -87,10 +70,11 @@ class HTU21D:
         self.i2c_device = I2CDevice(i2c_bus, address)
         self._command(_RESET)
         self._measurement = 0
+        time.sleep(0.01)
 
     def _command(self, command):
         with self.i2c_device as i2c:
-            i2c.write(struct.pack('B', command))
+            i2c.write(struct.pack("B", command))
 
     def _data(self):
         data = bytearray(3)
@@ -99,11 +83,11 @@ class HTU21D:
             try:
                 with self.i2c_device as i2c:
                     i2c.readinto(data)
-                    if data[0] != 0xff:  # Check if read succeeded.
+                    if data[0] != 0xFF:  # Check if read succeeded.
                         break
             except OSError:
                 pass
-        value, checksum = struct.unpack('>HB', data)
+        value, checksum = struct.unpack(">HB", data)
         if checksum != _crc(data[:2]):
             raise ValueError("CRC mismatch")
         return value
@@ -113,6 +97,7 @@ class HTU21D:
         """The measured relative humidity in percent."""
         self.measurement(HUMIDITY)
         self._measurement = 0
+        time.sleep(0.016)
         return self._data() * 125.0 / 65536.0 - 6.0
 
     @property
@@ -120,6 +105,7 @@ class HTU21D:
         """The measured temperature in degrees Celcius."""
         self.measurement(TEMPERATURE)
         self._measurement = 0
+        time.sleep(0.050)
         return self._data() * 175.72 / 65536.0 - 46.85
 
     def measurement(self, what):

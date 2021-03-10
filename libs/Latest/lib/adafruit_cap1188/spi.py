@@ -1,24 +1,7 @@
-# The MIT License (MIT)
+# SPDX-FileCopyrightText: 2018 Carter Nelson for Adafruit Industries
 #
-# Copyright (c) 2018 Carter Nelson for Adafruit Industries
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
+# SPDX-License-Identifier: MIT
+
 """
 `adafruit_cap1188.spi`
 ====================================================
@@ -46,17 +29,17 @@ import adafruit_bus_device.spi_device as spi_device
 from micropython import const
 from adafruit_cap1188.cap1188 import CAP1188
 
-__version__ = "1.1.1"
+__version__ = "1.2.6"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_CAP1188.git"
 
-# pylint: disable=bad-whitespace
-_CAP1188_SPI_SET_ADDR        = const(0x7D)
-_CAP1188_SPI_WRITE_DATA      = const(0x7E)
-_CAP1188_SPI_READ_DATA       = const(0x7F)
-# pylint: enable=bad-whitespace
+_CAP1188_SPI_SET_ADDR = const(0x7D)
+_CAP1188_SPI_WRITE_DATA = const(0x7E)
+_CAP1188_SPI_READ_DATA = const(0x7F)
+
 
 class CAP1188_SPI(CAP1188):
     """Driver for the CAP1188 connected over SPI."""
+
     def __init__(self, spi, cs):
         self._spi = spi_device.SPIDevice(spi, cs)
         self._buf = bytearray(4)
@@ -88,7 +71,7 @@ class CAP1188_SPI(CAP1188):
         self._buf[0] = _CAP1188_SPI_SET_ADDR
         self._buf[1] = start
         self._buf[2] = _CAP1188_SPI_READ_DATA
-        result = bytearray((_CAP1188_SPI_READ_DATA,)*length)
+        result = bytearray((_CAP1188_SPI_READ_DATA,) * length)
         with self._spi as spi:
             spi.write(self._buf, end=3)
             spi.write_readinto(result, result)

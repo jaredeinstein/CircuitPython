@@ -1,24 +1,7 @@
-# The MIT License (MIT)
+# SPDX-FileCopyrightText: 2019 Melissa LeBlanc-Williams for Adafruit Industries
 #
-# Copyright (c) 2019 Melissa LeBlanc-Williams for Adafruit Industries LLC
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
+# SPDX-License-Identifier: MIT
+
 """
 `adafruit_featherwing.matrix_featherwing`
 ====================================================
@@ -29,17 +12,19 @@ Helper for using the `Adafruit 8x16 LED Matrix FeatherWing
 * Author(s): Melissa LeBlanc-Williams
 """
 
-__version__ = "1.7.3"
+__version__ = "1.13.4"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_FeatherWing.git"
 
 import board
 import adafruit_ht16k33.matrix as matrix
 
+
 class MatrixFeatherWing:
     """Class representing an `Adafruit 8x16 LED Matrix FeatherWing
-       <https://www.adafruit.com/product/3155>`_.
+    <https://www.adafruit.com/product/3155>`_.
 
-       Automatically uses the feather's I2C bus."""
+    Automatically uses the feather's I2C bus."""
+
     def __init__(self, address=0x70, i2c=None):
         if i2c is None:
             i2c = board.I2C()
@@ -102,7 +87,7 @@ class MatrixFeatherWing:
             self._matrix.fill(1 if fill else 0)
             self._update()
         else:
-            raise ValueError('Must set to either True or False.')
+            raise ValueError("Must set to either True or False.")
 
     def shift_right(self, rotate=False):
         """
@@ -110,11 +95,7 @@ class MatrixFeatherWing:
 
         :param rotate: (Optional) Rotate the shifted pixels to the left side (default=False)
         """
-        for y in range(0, self.rows):
-            last_pixel = self._matrix[self.columns - 1, y] if rotate else 0
-            for x in range(self.columns - 1, 0, -1):
-                self._matrix[x, y] = self._matrix[x - 1, y]
-            self._matrix[0, y] = last_pixel
+        self._matrix.shift_right(rotate)
         self._update()
 
     def shift_left(self, rotate=False):
@@ -123,11 +104,7 @@ class MatrixFeatherWing:
 
         :param rotate: (Optional) Rotate the shifted pixels to the right side (default=False)
         """
-        for y in range(0, self.rows):
-            last_pixel = self._matrix[0, y] if rotate else 0
-            for x in range(0, self.columns - 1):
-                self._matrix[x, y] = self._matrix[x + 1, y]
-            self._matrix[self.columns - 1, y] = last_pixel
+        self._matrix.shift_left(rotate)
         self._update()
 
     def shift_up(self, rotate=False):
@@ -136,11 +113,7 @@ class MatrixFeatherWing:
 
         :param rotate: (Optional) Rotate the shifted pixels to bottom (default=False)
         """
-        for x in range(0, self.columns):
-            last_pixel = self._matrix[x, self.rows - 1] if rotate else 0
-            for y in range(self.rows - 1, 0, -1):
-                self._matrix[x, y] = self._matrix[x, y - 1]
-            self._matrix[x, 0] = last_pixel
+        self._matrix.shift_up(rotate)
         self._update()
 
     def shift_down(self, rotate=False):
@@ -149,11 +122,7 @@ class MatrixFeatherWing:
 
         :param rotate: (Optional) Rotate the shifted pixels to top (default=False)
         """
-        for x in range(0, self.columns):
-            last_pixel = self._matrix[x, 0] if rotate else 0
-            for y in range(0, self.rows - 1):
-                self._matrix[x, y] = self._matrix[x, y + 1]
-            self._matrix[x, self.rows - 1] = last_pixel
+        self._matrix.shift_down(rotate)
         self._update()
 
     @property
@@ -188,8 +157,10 @@ class MatrixFeatherWing:
         Brightness returns the current display brightness.
         0-15 = Dimmest to Brightest Setting
         """
-        return self._matrix.brightness
+        return round(self._matrix.brightness * 15)
 
     @brightness.setter
     def brightness(self, brightness):
-        self._matrix.brightness = brightness
+        if not 0 <= brightness <= 15:
+            raise ValueError("Brightness must be a value between 0 and 15")
+        self._matrix.brightness = brightness / 15

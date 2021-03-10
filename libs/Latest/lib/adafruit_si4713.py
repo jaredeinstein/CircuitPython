@@ -1,24 +1,7 @@
-# The MIT License (MIT)
+# SPDX-FileCopyrightText: 2017 Tony DiCola for Adafruit Industries
 #
-# Copyright (c) 2017 Tony DiCola for Adafruit Industries
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
+# SPDX-License-Identifier: MIT
+
 """
 `adafruit_si4713`
 ====================================================
@@ -32,6 +15,7 @@ at: https://github.com/adafruit/Adafruit-Si4713-Library/
 import time
 
 from micropython import const
+
 try:
     import struct
 except ImportError:
@@ -40,66 +24,64 @@ except ImportError:
 import adafruit_bus_device.i2c_device as i2c_device
 
 
-__version__ = "1.1.2"
+__version__ = "1.2.6"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_SI4713.git"
 
 
-#pylint: disable=bad-whitespace
 # Internal constants:
-_SI4710_ADDR0                           = const(0x11) # if SEN is = const(low)
-_SI4710_ADDR1                           = const(0x63) # if SEN is high, default
-_SI4710_STATUS_CTS                      = const(0x80)
-_SI4710_CMD_POWER_UP                    = const(0x01)
-_SI4710_CMD_GET_REV                     = const(0x10)
-_SI4710_CMD_POWER_DOWN                  = const(0x11)
-_SI4710_CMD_SET_PROPERTY                = const(0x12)
-_SI4710_CMD_GET_PROPERTY                = const(0x13)
-_SI4710_CMD_GET_INT_STATUS              = const(0x14)
-_SI4710_CMD_PATCH_ARGS                  = const(0x15)
-_SI4710_CMD_PATCH_DATA                  = const(0x16)
-_SI4710_CMD_TX_TUNE_FREQ                = const(0x30)
-_SI4710_CMD_TX_TUNE_POWER               = const(0x31)
-_SI4710_CMD_TX_TUNE_MEASURE             = const(0x32)
-_SI4710_CMD_TX_TUNE_STATUS              = const(0x33)
-_SI4710_CMD_TX_ASQ_STATUS               = const(0x34)
-_SI4710_CMD_TX_RDS_BUFF                 = const(0x35)
-_SI4710_CMD_TX_RDS_PS                   = const(0x36)
-_SI4710_CMD_TX_AGC_OVERRIDE             = const(0x48)
-_SI4710_CMD_GPO_CTL                     = const(0x80)
-_SI4710_CMD_GPO_SET                     = const(0x81)
-_SI4713_PROP_GPO_IEN                    = const(0x0001)
-_SI4713_PROP_DIGITAL_INPUT_FORMAT       = const(0x0101)
-_SI4713_PROP_DIGITAL_INPUT_SAMPLE_RATE  = const(0x0103)
-_SI4713_PROP_REFCLK_FREQ                = const(0x0201)
-_SI4713_PROP_REFCLK_PRESCALE            = const(0x0202)
-_SI4713_PROP_TX_COMPONENT_ENABLE        = const(0x2100)
-_SI4713_PROP_TX_AUDIO_DEVIATION         = const(0x2101)
-_SI4713_PROP_TX_PILOT_DEVIATION         = const(0x2102)
-_SI4713_PROP_TX_RDS_DEVIATION           = const(0x2103)
-_SI4713_PROP_TX_LINE_LEVEL_INPUT_LEVEL  = const(0x2104)
-_SI4713_PROP_TX_LINE_INPUT_MUTE         = const(0x2105)
-_SI4713_PROP_TX_PREEMPHASIS             = const(0x2106)
-_SI4713_PROP_TX_PILOT_FREQUENCY         = const(0x2107)
-_SI4713_PROP_TX_ACOMP_ENABLE            = const(0x2200)
-_SI4713_PROP_TX_ACOMP_THRESHOLD         = const(0x2201)
-_SI4713_PROP_TX_ATTACK_TIME             = const(0x2202)
-_SI4713_PROP_TX_RELEASE_TIME            = const(0x2203)
-_SI4713_PROP_TX_ACOMP_GAIN              = const(0x2204)
-_SI4713_PROP_TX_LIMITER_RELEASE_TIME    = const(0x2205)
-_SI4713_PROP_TX_ASQ_INTERRUPT_SOURCE    = const(0x2300)
-_SI4713_PROP_TX_ASQ_LEVEL_LOW           = const(0x2301)
-_SI4713_PROP_TX_ASQ_DURATION_LOW        = const(0x2302)
-_SI4713_PROP_TX_AQS_LEVEL_HIGH          = const(0x2303)
-_SI4713_PROP_TX_AQS_DURATION_HIGH       = const(0x2304)
-_SI4713_PROP_TX_RDS_INTERRUPT_SOURCE    = const(0x2C00)
-_SI4713_PROP_TX_RDS_PI                  = const(0x2C01)
-_SI4713_PROP_TX_RDS_PS_MIX              = const(0x2C02)
-_SI4713_PROP_TX_RDS_PS_MISC             = const(0x2C03)
-_SI4713_PROP_TX_RDS_PS_REPEAT_COUNT     = const(0x2C04)
-_SI4713_PROP_TX_RDS_MESSAGE_COUNT       = const(0x2C05)
-_SI4713_PROP_TX_RDS_PS_AF               = const(0x2C06)
-_SI4713_PROP_TX_RDS_FIFO_SIZE           = const(0x2C07)
-#pylint: enable=bad-whitespace
+_SI4710_ADDR0 = const(0x11)  # if SEN is = const(low)
+_SI4710_ADDR1 = const(0x63)  # if SEN is high, default
+_SI4710_STATUS_CTS = const(0x80)
+_SI4710_CMD_POWER_UP = const(0x01)
+_SI4710_CMD_GET_REV = const(0x10)
+_SI4710_CMD_POWER_DOWN = const(0x11)
+_SI4710_CMD_SET_PROPERTY = const(0x12)
+_SI4710_CMD_GET_PROPERTY = const(0x13)
+_SI4710_CMD_GET_INT_STATUS = const(0x14)
+_SI4710_CMD_PATCH_ARGS = const(0x15)
+_SI4710_CMD_PATCH_DATA = const(0x16)
+_SI4710_CMD_TX_TUNE_FREQ = const(0x30)
+_SI4710_CMD_TX_TUNE_POWER = const(0x31)
+_SI4710_CMD_TX_TUNE_MEASURE = const(0x32)
+_SI4710_CMD_TX_TUNE_STATUS = const(0x33)
+_SI4710_CMD_TX_ASQ_STATUS = const(0x34)
+_SI4710_CMD_TX_RDS_BUFF = const(0x35)
+_SI4710_CMD_TX_RDS_PS = const(0x36)
+_SI4710_CMD_TX_AGC_OVERRIDE = const(0x48)
+_SI4710_CMD_GPO_CTL = const(0x80)
+_SI4710_CMD_GPO_SET = const(0x81)
+_SI4713_PROP_GPO_IEN = const(0x0001)
+_SI4713_PROP_DIGITAL_INPUT_FORMAT = const(0x0101)
+_SI4713_PROP_DIGITAL_INPUT_SAMPLE_RATE = const(0x0103)
+_SI4713_PROP_REFCLK_FREQ = const(0x0201)
+_SI4713_PROP_REFCLK_PRESCALE = const(0x0202)
+_SI4713_PROP_TX_COMPONENT_ENABLE = const(0x2100)
+_SI4713_PROP_TX_AUDIO_DEVIATION = const(0x2101)
+_SI4713_PROP_TX_PILOT_DEVIATION = const(0x2102)
+_SI4713_PROP_TX_RDS_DEVIATION = const(0x2103)
+_SI4713_PROP_TX_LINE_LEVEL_INPUT_LEVEL = const(0x2104)
+_SI4713_PROP_TX_LINE_INPUT_MUTE = const(0x2105)
+_SI4713_PROP_TX_PREEMPHASIS = const(0x2106)
+_SI4713_PROP_TX_PILOT_FREQUENCY = const(0x2107)
+_SI4713_PROP_TX_ACOMP_ENABLE = const(0x2200)
+_SI4713_PROP_TX_ACOMP_THRESHOLD = const(0x2201)
+_SI4713_PROP_TX_ATTACK_TIME = const(0x2202)
+_SI4713_PROP_TX_RELEASE_TIME = const(0x2203)
+_SI4713_PROP_TX_ACOMP_GAIN = const(0x2204)
+_SI4713_PROP_TX_LIMITER_RELEASE_TIME = const(0x2205)
+_SI4713_PROP_TX_ASQ_INTERRUPT_SOURCE = const(0x2300)
+_SI4713_PROP_TX_ASQ_LEVEL_LOW = const(0x2301)
+_SI4713_PROP_TX_ASQ_DURATION_LOW = const(0x2302)
+_SI4713_PROP_TX_AQS_LEVEL_HIGH = const(0x2303)
+_SI4713_PROP_TX_AQS_DURATION_HIGH = const(0x2304)
+_SI4713_PROP_TX_RDS_INTERRUPT_SOURCE = const(0x2C00)
+_SI4713_PROP_TX_RDS_PI = const(0x2C01)
+_SI4713_PROP_TX_RDS_PS_MIX = const(0x2C02)
+_SI4713_PROP_TX_RDS_PS_MISC = const(0x2C03)
+_SI4713_PROP_TX_RDS_PS_REPEAT_COUNT = const(0x2C04)
+_SI4713_PROP_TX_RDS_MESSAGE_COUNT = const(0x2C05)
+_SI4713_PROP_TX_RDS_PS_AF = const(0x2C06)
+_SI4713_PROP_TX_RDS_FIFO_SIZE = const(0x2C07)
 
 
 class SI4713:
@@ -141,13 +123,15 @@ class SI4713:
         self.reset()
         # Check product ID.
         if self._get_product_number() != 13:
-            raise RuntimeError('Failed to find SI4713, check wiring!')
+            raise RuntimeError("Failed to find SI4713, check wiring!")
 
     def _read_u8(self, address):
         # Read an 8-bit unsigned value from the specified 8-bit address.
         with self._device as i2c:
             self._BUFFER[0] = address & 0xFF
-            i2c.write(self._BUFFER, end=1, stop=True)
+            # TODO: This is probably wrong and should be write_then_readinto to avoid a stop before
+            # repeated start.
+            i2c.write(self._BUFFER, end=1)
             i2c.readinto(self._BUFFER, end=1)
         return self._BUFFER[0]
 
@@ -169,8 +153,9 @@ class SI4713:
         if count is None:
             count = len(buf)
         # Send command.
+        # TODO: This probably needs to be one write_then_readinto.
         with self._device as i2c:
-            i2c.write(buf, end=count, stop=True)
+            i2c.write(buf, end=count)
         # Poll the status bit waiting for success or throwing a timeout error.
         start = time.monotonic()
         while True:
@@ -179,7 +164,7 @@ class SI4713:
             if self._BUFFER[0] & _SI4710_STATUS_CTS > 0:
                 return
             if time.monotonic() - start > self._timeout_s:
-                raise RuntimeError('Timeout waiting for SI4723 response, check wiring!')
+                raise RuntimeError("Timeout waiting for SI4723 response, check wiring!")
 
     def _set_property(self, prop, val):
         # Set a property of the SI4713 chip.  These are both 16-bit values.
@@ -202,10 +187,10 @@ class SI4713:
             i2c.readinto(self._BUFFER, end=9)
         return self._BUFFER[1]
         # Other potentially useful but unused data:
-        #fw = (self._BUFFER[2] << 8) | self._BUFFER[3]
-        #patch = (self._BUFFER[4] << 8) | self._BUFFER[5]
-        #cmp = (self._BUFFER[6] << 8) | self._BUFFER[7]
-        #rev = (self._BUFFER[8])
+        # fw = (self._BUFFER[2] << 8) | self._BUFFER[3]
+        # patch = (self._BUFFER[4] << 8) | self._BUFFER[5]
+        # cmp = (self._BUFFER[6] << 8) | self._BUFFER[7]
+        # rev = (self._BUFFER[8])
 
     def reset(self):
         """Perform a reset of the chip using the reset line.  Will also
@@ -255,7 +240,7 @@ class SI4713:
         while self.interrupt_status != expected:
             time.sleep(0.01)  # Short delay for other processing.
             if time.monotonic() - start > self._timeout_s:
-                raise RuntimeError('Timeout waiting for SI4713 to respond!')
+                raise RuntimeError("Timeout waiting for SI4713 to respond!")
 
     def _tune_status(self):
         # Retrieve the tune status command values from the radio.  Will store
@@ -369,8 +354,7 @@ class SI4713:
         # Validate frequency and capacitance.
         assert 76000 <= frequency_khz <= 108000
         assert (frequency_khz % 50) == 0
-        assert antenna_capacitance == 0 or \
-               (0.25 <= antenna_capacitance <= 47.75)
+        assert antenna_capacitance == 0 or (0.25 <= antenna_capacitance <= 47.75)
         # Convert frequency and capacitance to units used by the chip.
         frequency_khz = (frequency_khz // 10) & 0xFFFF
         antenna_capacitance = int(antenna_capacitance / 0.25)
@@ -395,7 +379,8 @@ class SI4713:
         """
         # Perform ASQ request, then parse out 8 bit _signed_ input level value.
         self._asq_status()
-        return struct.unpack('bbbbb', self._BUFFER[0:5])[4]
+        return struct.unpack("bbbbb", self._BUFFER[0:5])[4]
+
     @property
     def audio_signal_status(self):
         """Retrieve the ASQ or audio signal quality status value from the chip.
@@ -453,14 +438,14 @@ class SI4713:
         # Set the RDS station broadcast value.
         station_length = len(station)
         assert 0 <= station_length <= 96
-        self._BUFFER[0] = _SI4710_CMD_TX_RDS_PS
         # Fire off each 4 byte update of the station value.
         for i in range(0, station_length, 4):
+            self._BUFFER[0] = _SI4710_CMD_TX_RDS_PS
             self._BUFFER[1] = i // 4
-            self._BUFFER[2] = station[i] if i < station_length else ' '
-            self._BUFFER[3] = station[i+1] if i+1 < station_length else ' '
-            self._BUFFER[4] = station[i+2] if i+2 < station_length else ' '
-            self._BUFFER[5] = station[i+3] if i+3 < station_length else ' '
+            self._BUFFER[2] = station[i] if i < station_length else 0x00
+            self._BUFFER[3] = station[i + 1] if i + 1 < station_length else 0x00
+            self._BUFFER[4] = station[i + 2] if i + 2 < station_length else 0x00
+            self._BUFFER[5] = station[i + 3] if i + 3 < station_length else 0x00
             self._write_from(self._BUFFER, count=6)
 
     def _set_rds_buffer(self, rds_buffer):
@@ -468,33 +453,37 @@ class SI4713:
         buf_length = len(rds_buffer)
         # 53 blocks in the circular buffer, each 2 bytes long.
         assert 0 <= buf_length <= 106
-        self._BUFFER[0] = _SI4710_CMD_TX_RDS_BUFF
-        self._BUFFER[1] = 0x06  # Clear the buffer and start update with first
-                                # request, then future requests will turn off
-                                # the empty bit to continue setting data.
-        self._BUFFER[2] = 0x20
         # Fire off each 4 byte update of the station value.
         for i in range(0, buf_length, 4):
+            self._BUFFER[0] = _SI4710_CMD_TX_RDS_BUFF
+            self._BUFFER[1] = 0x06 if i == 0 else 0x04
+            self._BUFFER[2] = 0x20
             self._BUFFER[3] = i // 4
-            self._BUFFER[4] = rds_buffer[i] if i < buf_length else ' '
-            self._BUFFER[5] = rds_buffer[i+1] if i+1 < buf_length else ' '
-            self._BUFFER[6] = rds_buffer[i+2] if i+2 < buf_length else ' '
-            self._BUFFER[7] = rds_buffer[i+3] if i+3 < buf_length else ' '
+            self._BUFFER[4] = rds_buffer[i] if i < buf_length else 0x00
+            self._BUFFER[5] = rds_buffer[i + 1] if i + 1 < buf_length else 0x00
+            self._BUFFER[6] = rds_buffer[i + 2] if i + 2 < buf_length else 0x00
+            self._BUFFER[7] = rds_buffer[i + 3] if i + 3 < buf_length else 0x00
             self._write_from(self._BUFFER, count=8)
-            # Make sure to turn off empty bit for next requests.
-            self._BUFFER[1] = 0x04
 
-    rds_station = property(None, _set_rds_station, None,
-                           """Set the RDS broadcast station to the specified
+    rds_station = property(
+        None,
+        _set_rds_station,
+        None,
+        """Set the RDS broadcast station to the specified
                            byte string.  Can be at most 96 bytes long and will
                            be padded with blank spaces if less.
-                           """)
+                           """,
+    )
 
-    rds_buffer = property(None, _set_rds_buffer, None,
-                          """Set the RDS broadcast buffer to the specified byte
+    rds_buffer = property(
+        None,
+        _set_rds_buffer,
+        None,
+        """Set the RDS broadcast buffer to the specified byte
                           string.  Can be at most 106 bytes long and will be
                           padded with blank spaces if less.
-                          """)
+                          """,
+    )
 
     def configure_rds(self, program_id, station=None, rds_buffer=None):
         """Configure and enable the RDS broadcast of the specified program ID.

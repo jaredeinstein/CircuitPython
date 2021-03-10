@@ -1,24 +1,7 @@
-# The MIT License (MIT)
+# SPDX-FileCopyrightText: 2016 Philip R. Moyer for Adafruit Industries
+# SPDX-FileCopyrightText: 2016 Radomir Dopieralski for Adafruit Industries
 #
-# Copyright (c) 2016 Philip R. Moyer and Radomir Dopieralski for Adafruit Industries.
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
+# SPDX-License-Identifier: MIT
 
 """
 `adafruit_pcf8523` - PCF8523 Real Time Clock module
@@ -57,7 +40,7 @@ Implementation Notes
 
 """
 
-__version__ = "1.2.2"
+__version__ = "1.5.4"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_PCF8523.git"
 
 from adafruit_bus_device.i2c_device import I2CDevice
@@ -68,6 +51,7 @@ from adafruit_register import i2c_bcd_datetime
 
 STANDARD_BATTERY_SWITCHOVER_AND_DETECTION = 0b000
 BATTERY_SWITCHOVER_OFF = 0b111
+
 
 class PCF8523:
     """Interface to the PCF8523 RTC."""
@@ -86,8 +70,9 @@ class PCF8523:
 
     # The False means that day and weekday share a register. The 0 is that the
     # first day of the week is value 0 and not 1.
-    alarm = i2c_bcd_alarm.BCDAlarmTimeRegister(0x0a, has_seconds=False, weekday_shared=False,
-                                               weekday_start=0)
+    alarm = i2c_bcd_alarm.BCDAlarmTimeRegister(
+        0x0A, has_seconds=False, weekday_shared=False, weekday_start=0
+    )
     """Alarm time for the first alarm."""
 
     alarm_interrupt = i2c_bit.RWBit(0x00, 1)
@@ -99,6 +84,20 @@ class PCF8523:
     battery_low = i2c_bit.ROBit(0x02, 2)
     """True if the battery is low and should be replaced."""
 
+    high_capacitance = i2c_bit.RWBit(0x00, 7)
+    """True for high oscillator capacitance (12.5pF), otherwise lower (7pF)"""
+
+    calibration_schedule_per_minute = i2c_bit.RWBit(0x0E, 7)
+    """False to apply the calibration offset every 2 hours (1 LSB = 4.340ppm);
+    True to offset every minute (1 LSB = 4.069ppm).  The default, False,
+    consumes less power.  See datasheet figures 28-31 for details."""
+
+    calibration = i2c_bits.RWBits(  # pylint: disable=unexpected-keyword-arg
+        7, 0xE, 0, signed=True
+    )
+    """Calibration offset to apply, from -64 to +63.  See the PCF8523 datasheet
+    figure 18 for the offset calibration calculation workflow."""
+
     def __init__(self, i2c_bus):
         self.i2c_device = I2CDevice(i2c_bus, 0x68)
 
@@ -108,8 +107,7 @@ class PCF8523:
         buf = bytearray(2)
         buf[0] = 0x12
         with self.i2c_device as i2c:
-            i2c.write(buf, end=1, stop=False)
-            i2c.readinto(buf, start=1)
+            i2c.write_then_readinto(buf, buf, out_end=1, in_start=1)
 
         if (buf[1] & 0b00000111) != 0b00000111:
             raise ValueError("Unable to find PCF8523 at i2c address 0x68.")
@@ -117,7 +115,7 @@ class PCF8523:
     @property
     def datetime(self):
         """Gets the current date and time or sets the current date and time then starts the
-           clock."""
+        clock."""
         return self.datetime_register
 
     @datetime.setter

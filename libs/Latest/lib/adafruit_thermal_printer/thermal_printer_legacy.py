@@ -1,24 +1,7 @@
-# The MIT License (MIT)
+# SPDX-FileCopyrightText: 2017 Tony DiCola for Adafruit Industries
 #
-# Copyright (c) 2017 Tony DiCola
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
+# SPDX-License-Identifier: MIT
+
 """
 `adafruit_thermal_printer.thermal_printer_legacy.ThermalPrinter`
 =================================================================
@@ -28,7 +11,8 @@ receipt printers.  Note that these printers have many different firmware
 versions and care must be taken to select the appropriate module inside this
 package for your firmware printer:
 
-* thermal_printer = The latest printers with firmware version 2.68+
+* thermal_printer_2168 = Printers with firmware version 2.168+.
+* thermal_printer = The latest printers with firmware version 2.68 up to 2.168
 * thermal_printer_264 = Printers with firmware version 2.64 up to 2.68.
 * thermal_printer_legacy = Printers with firmware version before 2.64.
 
@@ -39,14 +23,12 @@ from micropython import const
 import adafruit_thermal_printer.thermal_printer as thermal_printer
 
 
-__version__ = "1.1.2"
+__version__ = "1.3.3"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_Thermal_Printer.git"
 
 
-# pylint: disable=bad-whitespace
 # Internally used constants.
-_INVERSE_MASK       = const(1 << 1) # Not in 2.6.8 firmware
-# pylint: enable=bad-whitespace
+_INVERSE_MASK = const(1 << 1)  # Not in 2.6.8 firmware
 
 
 # Legacy behavior class for printers with firmware before 2.64.
@@ -55,26 +37,25 @@ _INVERSE_MASK       = const(1 << 1) # Not in 2.6.8 firmware
 class ThermalPrinter(thermal_printer.ThermalPrinter):
     """Thermal printer for printers with firmware version before 2.64."""
 
-    # pylint: disable=bad-whitespace
     # Barcode types.  These vary based on the firmware version so are made
     # as class-level variables that users can reference (i.e.
     # ThermalPrinter.UPC_A, etc) and write code that is independent of the
     # printer firmware version.
-    UPC_A   =  0
-    UPC_E   =  1
-    EAN13   =  2
-    EAN8    =  3
-    CODE39  =  4
-    I25     =  5
-    CODEBAR =  6
-    CODE93  =  7
-    CODE128 =  8
-    CODE11  =  9
-    MSI     = 10
-    # pylint: enable=bad-whitespace
+    UPC_A = 0
+    UPC_E = 1
+    EAN13 = 2
+    EAN8 = 3
+    CODE39 = 4
+    I25 = 5
+    CODEBAR = 6
+    CODE93 = 7
+    CODE128 = 8
+    CODE11 = 9
+    MSI = 10
 
-    def __init__(self, uart, byte_delay_s=0.00057346, dot_feed_s=0.0021,
-                 dot_print_s=0.03):
+    def __init__(
+        self, uart, byte_delay_s=0.00057346, dot_feed_s=0.0021, dot_print_s=0.03
+    ):
         """Thermal printer class.  Requires a serial UART connection with at
         least the TX pin connected.  Take care connecting RX as the printer
         will output a 5V signal which can damage boards!  If RX is unconnected
@@ -85,9 +66,12 @@ class ThermalPrinter(thermal_printer.ThermalPrinter):
         understand the workings of the printer and how delays, baud rate,
         number of dots, heat time, etc. relate to each other.
         """
-        super().__init__(uart, byte_delay_s=byte_delay_s, dot_feed_s=dot_feed_s,
-                         dot_print_s=dot_print_s)
-
+        super().__init__(
+            uart,
+            byte_delay_s=byte_delay_s,
+            dot_feed_s=dot_feed_s,
+            dot_print_s=dot_print_s,
+        )
 
     def print_barcode(self, text, barcode_type):
         """Print a barcode with the specified text/number (the meaning
@@ -99,20 +83,20 @@ class ThermalPrinter(thermal_printer.ThermalPrinter):
         assert 0 <= barcode_type <= 255
         assert 0 <= len(text) <= 255
         self.feed(1)  # Recent firmware can't print barcode w/o feed first???
-        self.send_command('\x1DH\x02')  # Print label below barcode
-        self.send_command('\x1Dw\x03')  # Barcode width 3 (0.375/1.0mm thin/thick)
-        self.send_command('\x1Dk{0}'.format(chr(barcode_type))) # Barcode type
+        self.send_command("\x1DH\x02")  # Print label below barcode
+        self.send_command("\x1Dw\x03")  # Barcode width 3 (0.375/1.0mm thin/thick)
+        self.send_command("\x1Dk{0}".format(chr(barcode_type)))  # Barcode type
         # Pre-2.64 firmware prints the text and then a null character to end.
         # Instead of the length of text as a prefix.
         self.send_command(text)
-        self.send_command('\x00')
+        self.send_command("\x00")
         self._set_timeout((self._barcode_height + 40) * self._dot_print_s)
         self._column = 0
 
     def reset(self):
         """Reset the printer."""
         # Issue a reset command to the printer. (ESC + @)
-        self.send_command('\x1B@')
+        self.send_command("\x1B@")
         # Reset internal state:
         self._column = 0
         self._max_column = 32
@@ -125,7 +109,7 @@ class ThermalPrinter(thermal_printer.ThermalPrinter):
         """Advance paper by specified number of blank lines."""
         # Just send line feeds for older printers.
         for _ in range(lines):
-            self._write_char('\n')
+            self._write_char("\n")
 
     def has_paper(self):
         """Return a boolean indicating if the printer has paper.  You MUST have
@@ -138,7 +122,7 @@ class ThermalPrinter(thermal_printer.ThermalPrinter):
 
         """
         # The paper check command is different for older firmware:
-        self.send_command('\x1Br\x00')  # ESC + 'r' + 0
+        self.send_command("\x1Br\x00")  # ESC + 'r' + 0
         status = self._uart.read(1)
         if status is None:
             return False

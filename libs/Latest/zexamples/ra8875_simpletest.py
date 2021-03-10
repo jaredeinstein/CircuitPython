@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2021 ladyada for Adafruit Industries
+# SPDX-License-Identifier: MIT
+
 # Quick test of RA8875 with Feather M4
 import time
 import busio
@@ -21,7 +24,7 @@ cs_pin = digitalio.DigitalInOut(board.D9)
 rst_pin = digitalio.DigitalInOut(board.D10)
 int_pin = digitalio.DigitalInOut(board.D11)
 
-# Config for display baudrate (default max is 4mhz):
+# Config for display baudrate (default max is 6mhz):
 BAUDRATE = 6000000
 
 # Setup SPI bus using hardware SPI:
@@ -45,23 +48,21 @@ display.fill(BLACK)
 display.circle(100, 100, 50, BLACK)
 display.fill_circle(100, 100, 49, BLUE)
 
-display.fill_rect(11, 11, 398, 198, GREEN)
+display.fill_rect(10, 10, 400, 200, GREEN)
 display.rect(10, 10, 400, 200, BLUE)
 display.fill_round_rect(200, 10, 200, 100, 10, RED)
-display.round_rect(199, 9, 202, 102, 12, BLUE)
+display.round_rect(200, 10, 200, 100, 10, BLUE)
 display.pixel(10, 10, BLACK)
 display.pixel(11, 11, BLACK)
 display.line(10, 10, 200, 100, RED)
+display.fill_triangle(200, 15, 250, 100, 150, 125, YELLOW)
 display.triangle(200, 15, 250, 100, 150, 125, BLACK)
-display.fill_triangle(200, 16, 249, 99, 151, 124, YELLOW)
+display.fill_ellipse(300, 100, 100, 40, BLUE)
 display.ellipse(300, 100, 100, 40, RED)
-display.fill_ellipse(300, 100, 98, 38, BLUE)
 display.curve(50, 100, 80, 40, 2, BLACK)
 display.fill_curve(50, 100, 78, 38, 2, WHITE)
 
 display.txt_set_cursor(display.width // 2 - 200, display.height // 2 - 20)
-print(display.width)
-print(display.height)
 display.txt_trans(WHITE)
 display.txt_size(2)
 testvar = 99
@@ -77,9 +78,16 @@ y_scale = 1024 / display.height
 while True:
     if display.touched():
         coords = display.touch_read()
-        display.fill_circle(int(coords[0]/x_scale), int(coords[1]/y_scale), 4, MAGENTA)
+        display.fill_circle(
+            int(coords[0] / x_scale), int(coords[1] / y_scale), 4, MAGENTA
+        )
         display.txt_color(WHITE, BLACK)
         display.txt_set_cursor(display.width // 2 - 220, display.height // 2 - 20)
         display.txt_size(2)
-        display.txt_write("Position (" + str(int(coords[0]/x_scale)) + ", " +
-                          str(int(coords[1]/y_scale)) + ")")
+        display.txt_write(
+            "Position ("
+            + str(int(coords[0] / x_scale))
+            + ", "
+            + str(int(coords[1] / y_scale))
+            + ")"
+        )

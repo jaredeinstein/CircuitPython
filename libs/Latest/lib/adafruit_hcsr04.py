@@ -1,24 +1,7 @@
-# The MIT License (MIT)
+# SPDX-FileCopyrightText: 2017 Mike Mabey
 #
-# Copyright (c) 2017 Mike Mabey
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
+# SPDX-License-Identifier: MIT
+
 """
 `adafruit_hcsr04`
 ====================================================
@@ -52,12 +35,14 @@ from digitalio import DigitalInOut, Direction
 _USE_PULSEIO = False
 try:
     from pulseio import PulseIn
+
     _USE_PULSEIO = True
 except ImportError:
-    pass   # This is OK, we'll try to bitbang it!
+    pass  # This is OK, we'll try to bitbang it!
 
-__version__ = "0.3.4"
+__version__ = "0.4.6"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_HCSR04.git"
+
 
 class HCSR04:
     """Control a HC-SR04 ultrasonic range sensor.
@@ -82,6 +67,7 @@ class HCSR04:
                 pass
             time.sleep(0.1)
     """
+
     def __init__(self, trigger_pin, echo_pin, *, timeout=0.1):
         """
         :param trigger_pin: The pin on the microcontroller that's connected to the
@@ -142,10 +128,10 @@ class HCSR04:
 
     def _dist_two_wire(self):
         if _USE_PULSEIO:
-            self._echo.clear()       # Discard any previous pulse values
+            self._echo.clear()  # Discard any previous pulse values
         self._trig.value = True  # Set trig high
-        time.sleep(0.00001)      # 10 micro seconds 10/1000/1000
-        self._trig.value = False # Set trig low
+        time.sleep(0.00001)  # 10 micro seconds 10/1000/1000
+        self._trig.value = False  # Set trig low
 
         pulselen = None
         timestamp = time.monotonic()
@@ -170,7 +156,7 @@ class HCSR04:
                 if time.monotonic() - timestamp > self._timeout:
                     raise RuntimeError("Timed out")
             pulselen = time.monotonic() - timestamp
-            pulselen *= 1000000 # convert to us to match pulseio
+            pulselen *= 1000000  # convert to us to match pulseio
         if pulselen >= 65535:
             raise RuntimeError("Timed out")
 

@@ -1,27 +1,9 @@
-# The MIT License (MIT)
+# SPDX-FileCopyrightText: 2016 Damien P. George (original Neopixel object)
+# SPDX-FileCopyrightText: 2017 Ladyada for Adafruit Industries
+# SPDX-FileCopyrightText: 2017 Scott Shawcroft for Adafruit Industries
+# SPDX-FileCopyrightText: 2018 Kevin J. Walters
 #
-# Copyright (c) 2016 Damien P. George (original Neopixel object)
-# Copyright (c) 2017 Ladyada
-# Copyright (c) 2017 Scott Shawcroft for Adafruit Industries
-# Copyright (c) 2018 Kevin J Walters
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
+# SPDX-License-Identifier: MIT
 
 """
 `adafruit_ws2801` - WS2801 LED pixel string driver
@@ -34,10 +16,11 @@ import math
 import busio
 import digitalio
 
-__version__ = "0.9.2"
+__version__ = "0.10.6"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_WS2801.git"
 
 ### based on https://github.com/adafruit/Adafruit_CircuitPython_DotStar
+
 
 class WS2801:
     """
@@ -72,7 +55,7 @@ class WS2801:
             self._spi = busio.SPI(clock, MOSI=data)
             while not self._spi.try_lock():
                 pass
-            self._spi.configure(baudrate=1000*1000)
+            self._spi.configure(baudrate=1000 * 1000)
         except ValueError:
             self.dpin = digitalio.DigitalInOut(data)
             self.cpin = digitalio.DigitalInOut(clock)
@@ -114,8 +97,8 @@ class WS2801:
         offset = index * 3
         if isinstance(value, int):
             r = value >> 16
-            g = (value >> 8) & 0xff
-            b = value & 0xff
+            g = (value >> 8) & 0xFF
+            b = value & 0xFF
         else:
             r, g, b = value
         # red/green/blue order for WS2801
@@ -143,15 +126,14 @@ class WS2801:
         if isinstance(index, slice):
             out = []
             for in_i in range(*index.indices(self._n)):
-                out.append(
-                    tuple(self._buf[in_i * 3 + (2 - i)] for i in range(3)))
+                out.append(tuple(self._buf[in_i * 3 + i] for i in range(3)))
             return out
         if index < 0:
             index += len(self)
         if index >= self._n or index < 0:
             raise IndexError
         offset = index * 3
-        return tuple(self._buf[offset + (2 - i)] for i in range(3))
+        return tuple(self._buf[offset + i] for i in range(3))
 
     def __len__(self):
         return self._n
@@ -180,8 +162,8 @@ class WS2801:
     def _ds_writebytes(self, buf):
         for b in buf:
             for _ in range(8):
+                self.dpin.value = b & 0x80
                 self.cpin.value = True
-                self.dpin.value = (b & 0x80)
                 self.cpin.value = False
                 b = b << 1
 
@@ -195,7 +177,7 @@ class WS2801:
         buf = self._buf
         if self.brightness < 1.0:
             buf = bytearray(len(self._buf))
-            for i in range(self._n):
+            for i in range(len(self._buf)):
                 buf[i] = int(self._buf[i] * self._brightness)
 
         if self._spi:

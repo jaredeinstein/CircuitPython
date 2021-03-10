@@ -1,24 +1,7 @@
-# The MIT License (MIT)
+# SPDX-FileCopyrightText: 2019 ladyada for Adafruit Industries
 #
-# Copyright (c) 2019 ladyada for Adafruit Industries
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
+# SPDX-License-Identifier: MIT
+
 """
 `adafruit_adt7410`
 ====================================================
@@ -50,7 +33,7 @@ from adafruit_bus_device.i2c_device import I2CDevice
 from adafruit_register.i2c_bit import RWBit, ROBit
 from micropython import const
 
-__version__ = "1.0.0"
+__version__ = "1.2.5"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_ADT7410.git"
 
 
@@ -60,6 +43,7 @@ _ADT7410_STATUS = const(0x2)
 _ADT7410_CONFIG = const(0x3)
 _ADT7410_ID = const(0xB)
 _ADT7410_SWRST = const(0x2F)
+
 
 class ADT7410:
     """Interface to the Analog Devices ADT7410 temperature sensor."""
@@ -71,7 +55,6 @@ class ADT7410:
     comparator_mode = RWBit(_ADT7410_CONFIG, 4)
     high_resolution = RWBit(_ADT7410_CONFIG, 7)
 
-
     def __init__(self, i2c_bus, address=0x48):
         self.i2c_device = I2CDevice(i2c_bus, address)
         self._buf = bytearray(3)
@@ -79,18 +62,16 @@ class ADT7410:
         # what we expect.
         _id = (self._read_register(_ADT7410_ID)[0]) & 0xF8
         if _id != 0xC8:
-            raise ValueError("Unable to find ADT7410 at i2c address " + str(hex(address)))
-        # Perform a software reset
-        self._write_register(_ADT7410_SWRST)
-        time.sleep(0.01)
+            raise ValueError(
+                "Unable to find ADT7410 at i2c address " + str(hex(address))
+            )
+        self.reset()
 
     @property
     def temperature(self):
         """The temperature in celsius"""
-        while not self.ready:
-            pass
         temp = self._read_register(_ADT7410_TEMPMSB, 2)
-        return struct.unpack('>h', temp)[0] / 128
+        return struct.unpack(">h", temp)[0] / 128
 
     @property
     def status(self):
@@ -106,12 +87,18 @@ class ADT7410:
     def configuration(self, val):
         return self._write_register(_ADT7410_CONFIG, val)
 
+    def reset(self):
+        """Perform a software reset"""
+        self._write_register(_ADT7410_SWRST)
+        time.sleep(0.5)
+
     def _read_register(self, addr, num=1):
         self._buf[0] = addr
         with self.i2c_device as i2c:
-            i2c.write_then_readinto(self._buf, self._buf, out_end=1,
-                                    in_start=1, in_end=num+1, stop=False)
-        return self._buf[1:num+1]
+            i2c.write_then_readinto(
+                self._buf, self._buf, out_end=1, in_start=1, in_end=num + 1
+            )
+        return self._buf[1 : num + 1]
 
     def _write_register(self, addr, data=None):
         self._buf[0] = addr

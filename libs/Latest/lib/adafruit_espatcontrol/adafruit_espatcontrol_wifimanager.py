@@ -1,24 +1,6 @@
-# The MIT License (MIT)
+# SPDX-FileCopyrightText: 2019 Melissa LeBlanc-Williams for Adafruit Industries
 #
-# Copyright (c) 2019 Melissa LeBlanc-Williams for Adafruit Industries
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
+# SPDX-License-Identifier: MIT
 
 """
 `adafruit_espatcontrol_wifimanager`
@@ -31,12 +13,15 @@ WiFi Manager for making ESP32 AT Control as WiFi much easier
 
 # pylint: disable=no-name-in-module
 
-import adafruit_espatcontrol.adafruit_espatcontrol_requests as requests
+import adafruit_requests as requests
+import adafruit_espatcontrol.adafruit_espatcontrol_socket as socket
+
 
 class ESPAT_WiFiManager:
     """
     A class to help manage the Wifi connection
     """
+
     def __init__(self, esp, secrets, status_pixel=None, attempts=2):
         """
         :param ESP_SPIcontrol esp: The ESP object we are using
@@ -50,7 +35,7 @@ class ESPAT_WiFiManager:
         self.debug = False
         self.secrets = secrets
         self.attempts = attempts
-        requests.set_interface(self._esp)
+        requests.set_socket(socket, esp)
         self.statuspix = status_pixel
         self.pixel_status(0)
 

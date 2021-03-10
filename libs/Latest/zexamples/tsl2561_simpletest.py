@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2021 ladyada for Adafruit Industries
+# SPDX-License-Identifier: MIT
+
+import time
 import board
 import busio
 import adafruit_tsl2561
@@ -18,6 +22,7 @@ print("Configuring TSL2561...")
 
 # Enable the light sensor
 tsl.enabled = True
+time.sleep(1)
 
 # Set gain 0=1x, 1=16x
 tsl.gain = 0
@@ -32,7 +37,7 @@ broadband = tsl.broadband
 infrared = tsl.infrared
 
 # Get raw (luminosity) readings using tuple unpacking
-#broadband, infrared = tsl.luminosity
+# broadband, infrared = tsl.luminosity
 
 # Get computed lux value (tsl.lux can return None or a float)
 lux = tsl.lux

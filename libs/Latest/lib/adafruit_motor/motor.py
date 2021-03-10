@@ -1,24 +1,7 @@
-# The MIT License (MIT)
+# SPDX-FileCopyrightText: 2017 Scott Shawcroft  for Adafruit Industries
 #
-# Copyright (c) 2017 Scott Shawcroft for Adafruit Industries LLC
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
+# SPDX-License-Identifier: MIT
+
 """
 `adafruit_motor.motor`
 ====================================================
@@ -37,17 +20,19 @@ factors already.
 * Author(s): Scott Shawcroft
 """
 
-__version__ = "1.4.1"
+__version__ = "3.2.8"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_Motor.git"
+
 
 class DCMotor:
     """DC motor driver. ``positive_pwm`` and ``negative_pwm`` can be swapped if the motor runs in
-       the opposite direction from what was expected for "forwards".
+    the opposite direction from what was expected for "forwards".
 
-       :param ~pulseio.PWMOut positive_pwm: The motor input that causes the motor to spin forwards
-         when high and the other is low.
-       :param ~pulseio.PWMOut negative_pwm: The motor input that causes the motor to spin backwards
-         when high and the other is low."""
+    :param ~pwmio.PWMOut positive_pwm: The motor input that causes the motor to spin forwards
+      when high and the other is low.
+    :param ~pwmio.PWMOut negative_pwm: The motor input that causes the motor to spin backwards
+      when high and the other is low."""
+
     def __init__(self, positive_pwm, negative_pwm):
         self._positive = positive_pwm
         self._negative = negative_pwm
@@ -70,10 +55,10 @@ class DCMotor:
             self._positive.duty_cycle = 0
             self._negative.duty_cycle = 0
         elif value == 0:
-            self._positive.duty_cycle = 0xffff
-            self._negative.duty_cycle = 0xffff
+            self._positive.duty_cycle = 0xFFFF
+            self._negative.duty_cycle = 0xFFFF
         else:
-            duty_cycle = int(0xffff * abs(value))
+            duty_cycle = int(0xFFFF * abs(value))
             if value < 0:
                 self._positive.duty_cycle = 0
                 self._negative.duty_cycle = duty_cycle
@@ -85,8 +70,4 @@ class DCMotor:
         return self
 
     def __exit__(self, exception_type, exception_value, traceback):
-        self.throttle = None
-
-    def deinit(self):
-        """Stop using the motor."""
         self.throttle = None

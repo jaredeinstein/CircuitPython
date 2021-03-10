@@ -1,24 +1,7 @@
-# The MIT License (MIT)
+# SPDX-FileCopyrightText: 2017 Carter Nelson for Adafruit Industries
 #
-# Copyright (c) 2017 Carter Nelson for Adafruit Industries
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
+# SPDX-License-Identifier: MIT
+
 """
 `adafruit_onewire.bus`
 ====================================================
@@ -28,7 +11,7 @@ Provide access to a 1-Wire bus.
 * Author(s): Carter Nelson
 """
 
-__version__ = "1.1.2"
+__version__ = "1.2.6"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_OneWire.git"
 
 import busio
@@ -39,11 +22,12 @@ _MATCH_ROM = const(0x55)
 _SKIP_ROM = const(0xCC)
 _MAX_DEV = const(10)
 
+
 class OneWireError(Exception):
     """A class to represent a 1-Wire exception."""
-    pass
 
-class OneWireAddress(object):
+
+class OneWireAddress:
     """A class to represent a 1-Wire address."""
 
     def __init__(self, rom):
@@ -69,7 +53,8 @@ class OneWireAddress(object):
         """The 8 bit family code."""
         return self._rom[0]
 
-class OneWireBus(object):
+
+class OneWireBus:
     """A class to represent a 1-Wire bus."""
 
     def __init__(self, pin):
@@ -90,7 +75,7 @@ class OneWireBus(object):
     def maximum_devices(self, count):
         if not isinstance(count, int):
             raise ValueError("Maximum must be an integer value 1 - 255.")
-        if count < 1 or count > 0xff:
+        if count < 1 or count > 0xFF:
             raise ValueError("Maximum must be an integer value 1 - 255.")
         self._maximum_devices = count
 
@@ -146,14 +131,16 @@ class OneWireBus(object):
         diff = 65
         rom = False
         count = 0
-        for _ in range(0xff):
+        for _ in range(0xFF):
             rom, diff = self._search_rom(rom, diff)
             if rom:
                 count += 1
                 if count > self.maximum_devices:
                     raise RuntimeError(
-                        "Maximum device count of {} exceeded."\
-                        .format(self.maximum_devices))
+                        "Maximum device count of {} exceeded.".format(
+                            self.maximum_devices
+                        )
+                    )
                 devices.append(OneWireAddress(rom))
             if diff == 0:
                 break
@@ -169,7 +156,6 @@ class OneWireBus(object):
         for i in range(8):
             bit = (value >> i) & 0x1
             self._ow.write_bit(bit)
-        return
 
     def _search_rom(self, l_rom, diff):
         if not self.reset():
@@ -185,10 +171,10 @@ class OneWireBus(object):
             for bit in range(8):
                 b = self._readbit()
                 if self._readbit():
-                    if b: # there are no devices or there is an error on the bus
+                    if b:  # there are no devices or there is an error on the bus
                         return None, 0
                 else:
-                    if not b: # collision, two devices with different bit meaning
+                    if not b:  # collision, two devices with different bit meaning
                         if diff > i or ((l_rom[byte] & (1 << bit)) and diff != i):
                             b = 1
                             next_diff = i

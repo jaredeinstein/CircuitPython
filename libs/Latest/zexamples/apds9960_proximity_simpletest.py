@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2021 ladyada for Adafruit Industries
+# SPDX-License-Identifier: MIT
+
 import board
 import busio
 import digitalio
@@ -14,7 +17,7 @@ apds.enable_proximity_interrupt = True
 while True:
     # print the proximity reading when the interrupt pin goes low
     if not int_pin.value:
-        print(apds.proximity())
+        print(apds.proximity)
 
         # clear the interrupt
         apds.clear_interrupt()

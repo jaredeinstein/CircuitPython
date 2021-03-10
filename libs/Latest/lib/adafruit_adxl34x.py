@@ -1,24 +1,7 @@
-# The MIT License (MIT)
+# SPDX-FileCopyrightText: 2018 Bryan Siepert for Adafruit Industries
 #
-# Copyright (c) 2018 Bryan Siepert for Adafruit Industries
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
+# SPDX-License-Identifier: MIT
+
 """
 `adafruit_adxl34x`
 ====================================================
@@ -45,56 +28,57 @@ https://www.adafruit.com/product/1231
 
 from micropython import const
 from adafruit_bus_device import i2c_device
+
 try:
     from struct import unpack
 except ImportError:
     from ustruct import unpack
-__version__ = "1.10.1"
+__version__ = "1.11.7"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_ADXL34x.git"
-#pylint: disable=bad-whitespace
-_ADXL345_DEFAULT_ADDRESS         = const(0x53) # Assumes ALT address pin low
+_ADXL345_DEFAULT_ADDRESS = const(0x53)  # Assumes ALT address pin low
 
 # Conversion factors
-_ADXL345_MG2G_MULTIPLIER = 0.004 # 4mg per lsb
-_STANDARD_GRAVITY = 9.80665 # earth standard gravity
+_ADXL345_MG2G_MULTIPLIER = 0.004  # 4mg per lsb
+_STANDARD_GRAVITY = 9.80665  # earth standard gravity
 
-_REG_DEVID               = const(0x00) # Device ID
-_REG_THRESH_TAP          = const(0x1D) # Tap threshold
-_REG_OFSX                = const(0x1E) # X-axis offset
-_REG_OFSY                = const(0x1F) # Y-axis offset
-_REG_OFSZ                = const(0x20) # Z-axis offset
-_REG_DUR                 = const(0x21) # Tap duration
-_REG_LATENT              = const(0x22) # Tap latency
-_REG_WINDOW              = const(0x23) # Tap window
-_REG_THRESH_ACT          = const(0x24) # Activity threshold
-_REG_THRESH_INACT        = const(0x25) # Inactivity threshold
-_REG_TIME_INACT          = const(0x26) # Inactivity time
-_REG_ACT_INACT_CTL       = const(0x27) # Axis enable control for [in]activity detection
-_REG_THRESH_FF           = const(0x28) # Free-fall threshold
-_REG_TIME_FF             = const(0x29) # Free-fall time
-_REG_TAP_AXES            = const(0x2A) # Axis control for single/double tap
-_REG_ACT_TAP_STATUS      = const(0x2B) # Source for single/double tap
-_REG_BW_RATE             = const(0x2C) # Data rate and power mode control
-_REG_POWER_CTL           = const(0x2D) # Power-saving features control
-_REG_INT_ENABLE          = const(0x2E) # Interrupt enable control
-_REG_INT_MAP             = const(0x2F) # Interrupt mapping control
-_REG_INT_SOURCE          = const(0x30) # Source of interrupts
-_REG_DATA_FORMAT         = const(0x31) # Data format control
-_REG_DATAX0              = const(0x32) # X-axis data 0
-_REG_DATAX1              = const(0x33) # X-axis data 1
-_REG_DATAY0              = const(0x34) # Y-axis data 0
-_REG_DATAY1              = const(0x35) # Y-axis data 1
-_REG_DATAZ0              = const(0x36) # Z-axis data 0
-_REG_DATAZ1              = const(0x37) # Z-axis data 1
-_REG_FIFO_CTL            = const(0x38) # FIFO control
-_REG_FIFO_STATUS         = const(0x39) # FIFO status
-_INT_SINGLE_TAP          = const(0b01000000) # SINGLE_TAP bit
-_INT_DOUBLE_TAP          = const(0b00100000) # DOUBLE_TAP bit
-_INT_ACT                 = const(0b00010000) # ACT bit
-_INT_INACT               = const(0b00001000) # INACT bit
-_INT_FREE_FALL           = const(0b00000100) # FREE_FALL  bit
+_REG_DEVID = const(0x00)  # Device ID
+_REG_THRESH_TAP = const(0x1D)  # Tap threshold
+_REG_OFSX = const(0x1E)  # X-axis offset
+_REG_OFSY = const(0x1F)  # Y-axis offset
+_REG_OFSZ = const(0x20)  # Z-axis offset
+_REG_DUR = const(0x21)  # Tap duration
+_REG_LATENT = const(0x22)  # Tap latency
+_REG_WINDOW = const(0x23)  # Tap window
+_REG_THRESH_ACT = const(0x24)  # Activity threshold
+_REG_THRESH_INACT = const(0x25)  # Inactivity threshold
+_REG_TIME_INACT = const(0x26)  # Inactivity time
+_REG_ACT_INACT_CTL = const(0x27)  # Axis enable control for [in]activity detection
+_REG_THRESH_FF = const(0x28)  # Free-fall threshold
+_REG_TIME_FF = const(0x29)  # Free-fall time
+_REG_TAP_AXES = const(0x2A)  # Axis control for single/double tap
+_REG_ACT_TAP_STATUS = const(0x2B)  # Source for single/double tap
+_REG_BW_RATE = const(0x2C)  # Data rate and power mode control
+_REG_POWER_CTL = const(0x2D)  # Power-saving features control
+_REG_INT_ENABLE = const(0x2E)  # Interrupt enable control
+_REG_INT_MAP = const(0x2F)  # Interrupt mapping control
+_REG_INT_SOURCE = const(0x30)  # Source of interrupts
+_REG_DATA_FORMAT = const(0x31)  # Data format control
+_REG_DATAX0 = const(0x32)  # X-axis data 0
+_REG_DATAX1 = const(0x33)  # X-axis data 1
+_REG_DATAY0 = const(0x34)  # Y-axis data 0
+_REG_DATAY1 = const(0x35)  # Y-axis data 1
+_REG_DATAZ0 = const(0x36)  # Z-axis data 0
+_REG_DATAZ1 = const(0x37)  # Z-axis data 1
+_REG_FIFO_CTL = const(0x38)  # FIFO control
+_REG_FIFO_STATUS = const(0x39)  # FIFO status
+_INT_SINGLE_TAP = const(0b01000000)  # SINGLE_TAP bit
+_INT_DOUBLE_TAP = const(0b00100000)  # DOUBLE_TAP bit
+_INT_ACT = const(0b00010000)  # ACT bit
+_INT_INACT = const(0b00001000)  # INACT bit
+_INT_FREE_FALL = const(0b00000100)  # FREE_FALL  bit
 
-class DataRate: #pylint: disable=too-few-public-methods
+
+class DataRate:  # pylint: disable=too-few-public-methods
     """An enum-like class representing the possible data rates.
     Possible values are
 
@@ -116,25 +100,26 @@ class DataRate: #pylint: disable=too-few-public-methods
     - ``DataRate.RATE_0_10_HZ``
 
     """
-    RATE_3200_HZ    = const(0b1111) # 1600Hz Bandwidth   140mA IDD
-    RATE_1600_HZ    = const(0b1110) #  800Hz Bandwidth    90mA IDD
-    RATE_800_HZ     = const(0b1101) #  400Hz Bandwidth   140mA IDD
-    RATE_400_HZ     = const(0b1100) #  200Hz Bandwidth   140mA IDD
-    RATE_200_HZ     = const(0b1011) #  100Hz Bandwidth   140mA IDD
-    RATE_100_HZ     = const(0b1010) #   50Hz Bandwidth   140mA IDD
-    RATE_50_HZ      = const(0b1001) #   25Hz Bandwidth    90mA IDD
-    RATE_25_HZ      = const(0b1000) # 12.5Hz Bandwidth    60mA IDD
-    RATE_12_5_HZ    = const(0b0111) # 6.25Hz Bandwidth    50mA IDD
-    RATE_6_25HZ     = const(0b0110) # 3.13Hz Bandwidth    45mA IDD
-    RATE_3_13_HZ    = const(0b0101) # 1.56Hz Bandwidth    40mA IDD
-    RATE_1_56_HZ    = const(0b0100) # 0.78Hz Bandwidth    34mA IDD
-    RATE_0_78_HZ    = const(0b0011) # 0.39Hz Bandwidth    23mA IDD
-    RATE_0_39_HZ    = const(0b0010) # 0.20Hz Bandwidth    23mA IDD
-    RATE_0_20_HZ    = const(0b0001) # 0.10Hz Bandwidth    23mA IDD
-    RATE_0_10_HZ    = const(0b0000) # 0.05Hz Bandwidth    23mA IDD (default value)
+
+    RATE_3200_HZ = const(0b1111)  # 1600Hz Bandwidth   140mA IDD
+    RATE_1600_HZ = const(0b1110)  #  800Hz Bandwidth    90mA IDD
+    RATE_800_HZ = const(0b1101)  #  400Hz Bandwidth   140mA IDD
+    RATE_400_HZ = const(0b1100)  #  200Hz Bandwidth   140mA IDD
+    RATE_200_HZ = const(0b1011)  #  100Hz Bandwidth   140mA IDD
+    RATE_100_HZ = const(0b1010)  #   50Hz Bandwidth   140mA IDD
+    RATE_50_HZ = const(0b1001)  #   25Hz Bandwidth    90mA IDD
+    RATE_25_HZ = const(0b1000)  # 12.5Hz Bandwidth    60mA IDD
+    RATE_12_5_HZ = const(0b0111)  # 6.25Hz Bandwidth    50mA IDD
+    RATE_6_25HZ = const(0b0110)  # 3.13Hz Bandwidth    45mA IDD
+    RATE_3_13_HZ = const(0b0101)  # 1.56Hz Bandwidth    40mA IDD
+    RATE_1_56_HZ = const(0b0100)  # 0.78Hz Bandwidth    34mA IDD
+    RATE_0_78_HZ = const(0b0011)  # 0.39Hz Bandwidth    23mA IDD
+    RATE_0_39_HZ = const(0b0010)  # 0.20Hz Bandwidth    23mA IDD
+    RATE_0_20_HZ = const(0b0001)  # 0.10Hz Bandwidth    23mA IDD
+    RATE_0_10_HZ = const(0b0000)  # 0.05Hz Bandwidth    23mA IDD (default value)
 
 
-class Range: #pylint: disable=too-few-public-methods
+class Range:  # pylint: disable=too-few-public-methods
     """An enum-like class representing the possible measurement ranges in +/- G.
 
     Possible values are
@@ -145,21 +130,22 @@ class Range: #pylint: disable=too-few-public-methods
     - ``Range.RANGE_2_G``
 
     """
-    RANGE_16_G  = const(0b11)   # +/- 16g
-    RANGE_8_G   = const(0b10)   # +/- 8g
-    RANGE_4_G   = const(0b01)   # +/- 4g
-    RANGE_2_G   = const(0b00)   # +/- 2g (default value)
 
-# pylint: enable=bad-whitespace
+    RANGE_16_G = const(0b11)  # +/- 16g
+    RANGE_8_G = const(0b10)  # +/- 8g
+    RANGE_4_G = const(0b01)  # +/- 4g
+    RANGE_2_G = const(0b00)  # +/- 2g (default value)
+
+
 class ADXL345:
     """Driver for the ADXL345 3 axis accelerometer
 
-        :param ~busio.I2C i2c_bus: The I2C bus the ADXL345 is connected to.
-        :param address: The I2C device address for the sensor. Default is ``0x53``.
+    :param ~busio.I2C i2c_bus: The I2C bus the ADXL345 is connected to.
+    :param address: The I2C device address for the sensor. Default is ``0x53``.
 
     """
-    def __init__(self, i2c, address=_ADXL345_DEFAULT_ADDRESS):
 
+    def __init__(self, i2c, address=_ADXL345_DEFAULT_ADDRESS):
 
         self._i2c = i2c_device.I2CDevice(i2c, address)
         self._buffer = bytearray(6)
@@ -173,7 +159,7 @@ class ADXL345:
     @property
     def acceleration(self):
         """The x, y, z acceleration values returned in a 3-tuple in m / s ^ 2."""
-        x, y, z = unpack('<hhh', self._read_register(_REG_DATAX0, 6))
+        x, y, z = unpack("<hhh", self._read_register(_REG_DATAX0, 6))
         x = x * _ADXL345_MG2G_MULTIPLIER * _STANDARD_GRAVITY
         y = y * _ADXL345_MG2G_MULTIPLIER * _STANDARD_GRAVITY
         z = z * _ADXL345_MG2G_MULTIPLIER * _STANDARD_GRAVITY
@@ -207,14 +193,22 @@ class ADXL345:
 
         for event_type, value in self._enabled_interrupts.items():
             if event_type == "motion":
-                self._event_status[event_type] = interrupt_source_register & _INT_ACT > 0
+                self._event_status[event_type] = (
+                    interrupt_source_register & _INT_ACT > 0
+                )
             if event_type == "tap":
                 if value == 1:
-                    self._event_status[event_type] = interrupt_source_register & _INT_SINGLE_TAP > 0
+                    self._event_status[event_type] = (
+                        interrupt_source_register & _INT_SINGLE_TAP > 0
+                    )
                 else:
-                    self._event_status[event_type] = interrupt_source_register & _INT_DOUBLE_TAP > 0
+                    self._event_status[event_type] = (
+                        interrupt_source_register & _INT_DOUBLE_TAP > 0
+                    )
             if event_type == "freefall":
-                self._event_status[event_type] = interrupt_source_register & _INT_FREE_FALL > 0
+                self._event_status[event_type] = (
+                    interrupt_source_register & _INT_FREE_FALL > 0
+                )
 
         return self._event_status
 
@@ -233,11 +227,12 @@ class ADXL345:
         """
         active_interrupts = self._read_register_unpacked(_REG_INT_ENABLE)
 
-
-        self._write_register_byte(_REG_INT_ENABLE, 0x0) # disable interrupts for setup
-        self._write_register_byte(_REG_ACT_INACT_CTL, 0b01110000) # enable activity on X,Y,Z
+        self._write_register_byte(_REG_INT_ENABLE, 0x0)  # disable interrupts for setup
+        self._write_register_byte(
+            _REG_ACT_INACT_CTL, 0b01110000
+        )  # enable activity on X,Y,Z
         self._write_register_byte(_REG_THRESH_ACT, threshold)
-        self._write_register_byte(_REG_INT_ENABLE, _INT_ACT) # Inactive interrupt only
+        self._write_register_byte(_REG_INT_ENABLE, _INT_ACT)  # Inactive interrupt only
 
         active_interrupts |= _INT_ACT
         self._write_register_byte(_REG_INT_ENABLE, active_interrupts)
@@ -251,7 +246,6 @@ class ADXL345:
         active_interrupts &= ~_INT_ACT
         self._write_register_byte(_REG_INT_ENABLE, active_interrupts)
         self._enabled_interrupts.pop("motion")
-
 
     def enable_freefall_detection(self, *, threshold=10, time=25):
         """
@@ -273,7 +267,7 @@ class ADXL345:
 
         active_interrupts = self._read_register_unpacked(_REG_INT_ENABLE)
 
-        self._write_register_byte(_REG_INT_ENABLE, 0x0) # disable interrupts for setup
+        self._write_register_byte(_REG_INT_ENABLE, 0x0)  # disable interrupts for setup
         self._write_register_byte(_REG_THRESH_FF, threshold)
         self._write_register_byte(_REG_TIME_FF, time)
 
@@ -289,15 +283,17 @@ class ADXL345:
         self._write_register_byte(_REG_INT_ENABLE, active_interrupts)
         self._enabled_interrupts.pop("freefall")
 
-    def enable_tap_detection(self, *, tap_count=1, threshold=20, duration=50, latency=20, window=255):#pylint: disable=line-too-long
+    def enable_tap_detection(
+        self, *, tap_count=1, threshold=20, duration=50, latency=20, window=255
+    ):  # pylint: disable=line-too-long
         """
         The tap detection parameters.
 
         :param int tap_count: 1 to detect only single taps, and 2 to detect only double taps.
 
         :param int threshold: A threshold for the tap detection. The scale factor is 62.5 mg/LSB\
-        The higher the value the less sensitive the detection. This changes based on the\
-        accelerometer range.
+        The higher the value the less sensitive the detection.
+
 
         :param int duration: This caps the duration of the impulse above ``threshhold``.\
         Anything above ``duration`` won't register as a tap. The scale factor is 625 µs/LSB
@@ -317,8 +313,10 @@ class ADXL345:
         """
         active_interrupts = self._read_register_unpacked(_REG_INT_ENABLE)
 
-        self._write_register_byte(_REG_INT_ENABLE, 0x0) # disable interrupts for setup
-        self._write_register_byte(_REG_TAP_AXES, 0b00000111) # enable X, Y, Z axes for tap
+        self._write_register_byte(_REG_INT_ENABLE, 0x0)  # disable interrupts for setup
+        self._write_register_byte(
+            _REG_TAP_AXES, 0b00000111
+        )  # enable X, Y, Z axes for tap
         self._write_register_byte(_REG_THRESH_TAP, threshold)
         self._write_register_byte(_REG_DUR, duration)
 
@@ -334,7 +332,9 @@ class ADXL345:
             self._write_register_byte(_REG_INT_ENABLE, active_interrupts)
             self._enabled_interrupts["tap"] = 2
         else:
-            raise ValueError("tap must be 0 to disable, 1 for single tap, or 2 for double tap")
+            raise ValueError(
+                "tap must be 0 to disable, 1 for single tap, or 2 for double tap"
+            )
 
     def disable_tap_detection(self):
         "Disable tap detection"
@@ -394,8 +394,8 @@ class ADXL345:
         with self._i2c as i2c:
             i2c.write(self._buffer, start=0, end=2)
 
-    def _config_iterrupt_register(self, register, value):
-        active_interrupts = self._read_register_unpacked(_REG_INT_ENABLE)
-        self._write_register_byte(_REG_INT_ENABLE, 0x0) # disable interrupts for setup
-        self._write_register_byte(register, value)
-        self._write_register_byte(_REG_INT_ENABLE, active_interrupts)
+
+class ADXL343(ADXL345):
+    """
+    Stub class for the ADXL343 3-axis accelerometer
+    """

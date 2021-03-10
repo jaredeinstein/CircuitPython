@@ -1,25 +1,8 @@
-# The MIT License (MIT)
+# SPDX-FileCopyrightText: 2017 Carter Nelson for Adafruit Industries
 #
-# Copyright (c) 2017 Carter Nelson for adafruit
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
+# SPDX-License-Identifier: MIT
 # pylint: disable=C0103
+
 """
 `adafruit_ds2413`
 ====================================================
@@ -29,20 +12,21 @@
 * Author(s): Carter Nelson
 """
 
-__version__ = "1.1.2"
+__version__ = "1.2.6"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_DS2413.git"
 
-from adafruit_onewire.device import OneWireDevice
 from micropython import const
+from adafruit_onewire.device import OneWireDevice
 
-_DS2413_ACCESS_READ = b'\xF5'
-_DS2413_ACCESS_WRITE = b'\x5A'
-_DS2413_ACK_SUCCESS = b'\xAA'
-_DS2413_ACK_ERROR = b'\xFF'
+_DS2413_ACCESS_READ = b"\xF5"
+_DS2413_ACCESS_WRITE = b"\x5A"
+_DS2413_ACK_SUCCESS = b"\xAA"
+_DS2413_ACK_ERROR = b"\xFF"
 INPUT = const(0)
 OUTPUT = const(1)
 
-class DS2413Pin():
+
+class DS2413Pin:
     """Class which provides interface to single DS2413 GPIO pin."""
 
     def __init__(self, number, host, direction=OUTPUT):
@@ -51,7 +35,7 @@ class DS2413Pin():
         self._number = number
         self._host = host
         self._mask = 1 << (number * 2)
-        self._direction = None      # create it, and then...
+        self._direction = None  # create it, and then...
         self.direction = direction  # set it through setter
 
     @property
@@ -96,7 +80,8 @@ class DS2413Pin():
             new |= 1 << self._number
         self._host.pio_state = new
 
-class DS2413():
+
+class DS2413:
     """Class which provides interface to DS2413 GPIO breakout."""
 
     def __init__(self, bus, address):
@@ -107,7 +92,7 @@ class DS2413():
             self._IOA = None
             self._IOB = None
         else:
-            raise RuntimeError('Incorrect family code in device address.')
+            raise RuntimeError("Incorrect family code in device address.")
 
     @property
     def IOA(self):
@@ -148,4 +133,4 @@ class DS2413():
             dev.write(self._buf, end=2)
             dev.readinto(self._buf, end=1)
         if not self._buf[0] == ord(_DS2413_ACK_SUCCESS):
-            raise RuntimeError('ACK failure.')
+            raise RuntimeError("ACK failure.")

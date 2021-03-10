@@ -1,24 +1,7 @@
-# The MIT License (MIT)
+# SPDX-FileCopyrightText: 2018 ladyada for Adafruit Industries
 #
-# Copyright (c) 2018 ladyada for adafruit
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
+# SPDX-License-Identifier: MIT
+
 """
 `adafruit_matrixkeypad`
 ====================================================
@@ -44,11 +27,13 @@ Implementation Notes
 # imports
 from digitalio import Direction, Pull
 
-__version__ = "1.1.4"
+__version__ = "1.2.5"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_MatrixKeypad.git"
 
-class Matrix_Keypad(object):
+
+class Matrix_Keypad:
     """Driver for passive matrix keypads - any size"""
+
     def __init__(self, row_pins, col_pins, keys):
         """Initialise the driver with the correct size and key list.
 
@@ -73,7 +58,7 @@ class Matrix_Keypad(object):
         pressed = []
 
         # set all pins pins to be inputs w/pullups
-        for pin in self.row_pins+self.col_pins:
+        for pin in self.row_pins + self.col_pins:
             pin.direction = Direction.INPUT
             pin.pull = Pull.UP
 

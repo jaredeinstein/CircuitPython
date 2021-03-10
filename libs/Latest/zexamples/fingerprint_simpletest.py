@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2021 ladyada for Adafruit Industries
+# SPDX-License-Identifier: MIT
+
 import time
 import board
 import busio
@@ -9,9 +12,13 @@ led.direction = Direction.OUTPUT
 
 uart = busio.UART(board.TX, board.RX, baudrate=57600)
 
-# If using with a computer such as Linux/RaspberryPi, Mac, Windows...
-#import serial
-#uart = serial.Serial("/dev/ttyUSB0", baudrate=57600, timeout=1)
+# If using with a computer such as Linux/RaspberryPi, Mac, Windows with USB/serial converter:
+# import serial
+# uart = serial.Serial("/dev/ttyUSB0", baudrate=57600, timeout=1)
+
+# If using with Linux/Raspberry Pi and hardware UART:
+# import serial
+# uart = serial.Serial("/dev/ttyS0", baudrate=57600, timeout=1)
 
 finger = adafruit_fingerprint.Adafruit_Fingerprint(uart)
 
@@ -27,9 +34,10 @@ def get_fingerprint():
     if finger.image_2_tz(1) != adafruit_fingerprint.OK:
         return False
     print("Searching...")
-    if finger.finger_fast_search() != adafruit_fingerprint.OK:
+    if finger.finger_search() != adafruit_fingerprint.OK:
         return False
     return True
+
 
 # pylint: disable=too-many-branches
 def get_fingerprint_detail():
@@ -77,6 +85,7 @@ def get_fingerprint_detail():
             print("Other error")
         return False
 
+
 # pylint: disable=too-many-statements
 def enroll_finger(location):
     """Take a 2 finger images and template it, then store in 'location'"""
@@ -91,7 +100,7 @@ def enroll_finger(location):
             if i == adafruit_fingerprint.OK:
                 print("Image taken")
                 break
-            elif i == adafruit_fingerprint.NOFINGER:
+            if i == adafruit_fingerprint.NOFINGER:
                 print(".", end="", flush=True)
             elif i == adafruit_fingerprint.IMAGEFAIL:
                 print("Imaging error")
@@ -150,6 +159,7 @@ def enroll_finger(location):
 
 ##################################################
 
+
 def get_num():
     """Use input() to get a valid number from 1 to 127. Retry till success!"""
     i = 0
@@ -164,7 +174,7 @@ def get_num():
 while True:
     print("----------------")
     if finger.read_templates() != adafruit_fingerprint.OK:
-        raise RuntimeError('Failed to read templates')
+        raise RuntimeError("Failed to read templates")
     print("Fingerprint templates:", finger.templates)
     print("e) enroll print")
     print("f) find print")
@@ -172,14 +182,14 @@ while True:
     print("----------------")
     c = input("> ")
 
-    if c == 'e':
+    if c == "e":
         enroll_finger(get_num())
-    if c == 'f':
+    if c == "f":
         if get_fingerprint():
             print("Detected #", finger.finger_id, "with confidence", finger.confidence)
         else:
             print("Finger not found")
-    if c == 'd':
+    if c == "d":
         if finger.delete_model(get_num()) == adafruit_fingerprint.OK:
             print("Deleted!")
         else:

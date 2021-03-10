@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2019 Scott Shawcroft for Adafruit Industries
+#
+# SPDX-License-Identifier: MIT
+
 # pylint: skip-file
 # Remove the above when TTF is actually supported.
 
@@ -6,8 +10,9 @@ import struct
 
 # https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6glyf.html
 
+
 class TTF:
-    def __init__(self, f):
+    def __init__(self, f, bitmap):
         f.seek(0)
         self.file = f
 
@@ -41,7 +46,7 @@ class TTF:
         while f.tell() < glyf_offset + glyf_length:
             numberOfContours, xMin, yMin, xMax, yMax = read(">hhhhh")
 
-            if numberOfContours > 0: # Simple
+            if numberOfContours > 0:  # Simple
                 print(numberOfContours)
                 ends = []
                 for _ in range(numberOfContours):

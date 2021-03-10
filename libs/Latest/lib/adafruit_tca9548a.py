@@ -1,24 +1,7 @@
-# The MIT License (MIT)
+# SPDX-FileCopyrightText: 2018 Carter Nelson for Adafruit Industries
 #
-# Copyright (c) 2018 Carter Nelson for Adafruit Industries
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
+# SPDX-License-Identifier: MIT
+
 """
 ``Adafruit_TCA9548A``
 ====================================================
@@ -46,13 +29,14 @@ from micropython import const
 
 _DEFAULT_ADDRESS = const(0x70)
 
-__version__ = "0.1.2"
+__version__ = "0.3.5"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_TCA9548A.git"
 
-class TCA9548A_Channel():
+
+class TCA9548A_Channel:
     """Helper class to represent an output channel on the TCA9548A and take care
-       of the necessary I2C commands for channel switching. This class needs to
-       behave like an I2CDevice."""
+    of the necessary I2C commands for channel switching. This class needs to
+    behave like an I2CDevice."""
 
     def __init__(self, tca, channel):
         self.tca = tca
@@ -67,6 +51,7 @@ class TCA9548A_Channel():
 
     def unlock(self):
         """Pass thru for unlock."""
+        self.tca.i2c.writeto(self.tca.address, b"\x00")
         return self.tca.i2c.unlock()
 
     def readfrom_into(self, address, buffer, **kwargs):
@@ -81,14 +66,23 @@ class TCA9548A_Channel():
             raise ValueError("Device address must be different than TCA9548A address.")
         return self.tca.i2c.writeto(address, buffer, **kwargs)
 
+    def writeto_then_readfrom(self, address, buffer_out, buffer_in, **kwargs):
+        """Pass thru for writeto_then_readfrom."""
+        # In linux, at least, this is a special kernel function call
+        if address == self.tca.address:
+            raise ValueError("Device address must be different than TCA9548A address.")
+        return self.tca.i2c.writeto_then_readfrom(
+            address, buffer_out, buffer_in, **kwargs
+        )
 
-class TCA9548A():
+
+class TCA9548A:
     """Class which provides interface to TCA9548A I2C multiplexer."""
 
     def __init__(self, i2c, address=_DEFAULT_ADDRESS):
         self.i2c = i2c
         self.address = address
-        self.channels = [None]*8
+        self.channels = [None] * 8
 
     def __len__(self):
         return 8

@@ -1,24 +1,7 @@
-# The MIT License (MIT)
+# SPDX-FileCopyrightText: 2018 Shawn Hymel for Adafruit Industries
 #
-# Copyright (c) 2018 Shawn Hymel for Adafruit Industries
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
+# SPDX-License-Identifier: MIT
+
 """
 `adafruit_boardtest.boardtest_uart`
 ====================================================
@@ -46,21 +29,22 @@ import random
 import board
 import busio
 
-__version__ = "1.0.1"
+__version__ = "1.2.5"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_BoardTest.git"
 
 # Constants
-TX_PIN_NAME = 'TX'
-RX_PIN_NAME = 'RX'
+TX_PIN_NAME = "TX"
+RX_PIN_NAME = "RX"
 BAUD_RATE = 9600
-NUM_UART_BYTES = 40         # Number of bytes to transmit over UART
-ASCII_MIN = 0x21            # '!' Lowest ASCII char in random range (inclusive)
-ASCII_MAX = 0x7E            # '~' Highest ASCII char in random range (inclusive)
+NUM_UART_BYTES = 40  # Number of bytes to transmit over UART
+ASCII_MIN = 0x21  # '!' Lowest ASCII char in random range (inclusive)
+ASCII_MAX = 0x7E  # '~' Highest ASCII char in random range (inclusive)
 
 # Test result strings
 PASS = "PASS"
 FAIL = "FAIL"
 NA = "N/A"
+
 
 def run_test(pins, tx_pin=TX_PIN_NAME, rx_pin=RX_PIN_NAME, baud_rate=BAUD_RATE):
 
@@ -81,10 +65,10 @@ def run_test(pins, tx_pin=TX_PIN_NAME, rx_pin=RX_PIN_NAME, baud_rate=BAUD_RATE):
         input()
 
         # Initialize UART
-        uart = busio.UART(getattr(board, tx_pin),
-                          getattr(board, rx_pin),
-                          baudrate=baud_rate)
-        uart.reset_input_buffer()   # pylint: disable=no-member
+        uart = busio.UART(
+            getattr(board, tx_pin), getattr(board, rx_pin), baudrate=baud_rate
+        )
+        uart.reset_input_buffer()  # pylint: disable=no-member
 
         # Generate test string
         test_str = ""
@@ -97,9 +81,9 @@ def run_test(pins, tx_pin=TX_PIN_NAME, rx_pin=RX_PIN_NAME, baud_rate=BAUD_RATE):
 
         # Wait for received string
         data = uart.read(len(test_str))
-        recv_str = ''
+        recv_str = ""
         if data is not None:
-            recv_str = ''.join([chr(b) for b in data])
+            recv_str = "".join([chr(b) for b in data])
             print("Received:\t" + recv_str)
 
         # Release UART pins
@@ -115,23 +99,25 @@ def run_test(pins, tx_pin=TX_PIN_NAME, rx_pin=RX_PIN_NAME, baud_rate=BAUD_RATE):
     print("No UART pins found")
     return NA, []
 
+
 def _main():
 
     # List out all the pins available to us
-    pins = [p for p in dir(board)]
+    pins = list(dir(board))
     print()
-    print("All pins found:", end=' ')
+    print("All pins found:", end=" ")
 
     # Print pins
     for pin in pins:
-        print(pin, end=' ')
-    print('\n')
+        print(pin, end=" ")
+    print("\n")
 
     # Run test
     result = run_test(pins)
     print()
     print(result[0])
     print("Pins tested: " + str(result[1]))
+
 
 # Execute only if run as main.py or code.py
 if __name__ == "__main__":

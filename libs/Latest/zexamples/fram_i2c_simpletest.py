@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2021 ladyada for Adafruit Industries
+# SPDX-License-Identifier: MIT
+
 ## Simple Example For CircuitPython/Python I2C FRAM Library
 
 import board
@@ -13,9 +16,9 @@ fram = adafruit_fram.FRAM_I2C(i2c)
 ## pin on breakout). 'write_protected()' can be used
 ## independent of the hardware pin.
 
-#import digitalio
-#wp = digitalio.DigitalInOut(board.D10)
-#fram = adafruit_fram.FRAM_I2C(i2c,
+# import digitalio
+# wp = digitalio.DigitalInOut(board.D10)
+# fram = adafruit_fram.FRAM_I2C(i2c,
 #                              address=0x53,
 #                              wp_pin=wp)
 
@@ -33,6 +36,6 @@ print(fram[0])
 ##       a buffer the size of slice, which may cause
 ##       problems on memory-constrained platforms.
 
-#values = list(range(100)) # or bytearray or tuple
-#fram[0] = values
-#print(fram[0:99])
+# values = list(range(100)) # or bytearray or tuple
+# fram[0] = values
+# print(fram[0:99])

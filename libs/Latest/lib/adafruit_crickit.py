@@ -1,24 +1,7 @@
-# The MIT License (MIT)
+# SPDX-FileCopyrightText: 2018 Dan Halbert for Adafruit Industries
 #
-# Copyright (c) 2018 Dan Halbert for Adafruit Industries
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
+# SPDX-License-Identifier: MIT
+
 """
 `adafruit_crickit`
 ==========================
@@ -44,13 +27,12 @@ Implementation Notes
 import sys
 
 import board
-import busio
 
 from micropython import const
 
-#pylint: disable=wrong-import-position
+# pylint: disable=wrong-import-position
 try:
-    lib_index = sys.path.index("/lib")        # pylint: disable=invalid-name
+    lib_index = sys.path.index("/lib")  # pylint: disable=invalid-name
     if lib_index < sys.path.index(".frozen"):
         # Prefer frozen modules over those in /lib.
         sys.path.insert(lib_index, ".frozen")
@@ -65,7 +47,7 @@ from adafruit_motor.servo import Servo, ContinuousServo
 from adafruit_motor.motor import DCMotor
 from adafruit_motor.stepper import StepperMotor
 
-__version__ = "2.1.4"
+__version__ = "2.3.5"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_Crickit.git"
 
 
@@ -94,10 +76,12 @@ _TOUCH3 = const(6)
 _TOUCH4 = const(7)
 
 _NEOPIXEL = const(20)
+_SS_PIXEL = const(27)
 
-#pylint: disable=too-few-public-methods
+# pylint: disable=too-few-public-methods
 class CrickitTouchIn:
     """Imitate touchio.TouchIn."""
+
     def __init__(self, seesaw, pin):
         self._seesaw = seesaw
         self._pin = pin
@@ -114,7 +98,7 @@ class CrickitTouchIn:
         return self.raw_value > self.threshold
 
 
-#pylint: disable=too-many-public-methods
+# pylint: disable=too-many-public-methods
 class Crickit:
     """Represents a Crickit board. Provides a number of devices available via properties, such as
     ``servo_1``. Devices are created on demand the first time they are referenced.
@@ -165,6 +149,7 @@ class Crickit:
         # Used to find existing devices.
         self._devices = dict()
         self._neopixel = None
+        self._onboard_pixel = None
 
     @property
     def seesaw(self):
@@ -259,7 +244,9 @@ class Crickit:
     def _motor(self, terminals, motor_class):
         device = self._devices.get(terminals, None)
         if not isinstance(device, motor_class):
-            device = motor_class(*(PWMOut(self._seesaw, terminal) for terminal in terminals))
+            device = motor_class(
+                *(PWMOut(self._seesaw, terminal) for terminal in terminals)
+            )
             self._devices[terminals] = device
         return device
 
@@ -344,8 +331,9 @@ class Crickit:
             raise ValueError("Call init_neopixel first")
         return self._neopixel
 
-
-    def init_neopixel(self, n, *, bpp=3, brightness=1.0, auto_write=True, pixel_order=None):
+    def init_neopixel(
+        self, n, *, bpp=3, brightness=1.0, auto_write=True, pixel_order=None
+    ):
         """Set up a seesaw.NeoPixel object
 
         .. note:: On the CPX Crickit board, the NeoPixel terminal is by default
@@ -365,18 +353,50 @@ class Crickit:
           crickit.init_neopixel(24)
           crickit.neopixel.fill((100, 0, 0))
         """
-        from adafruit_seesaw.neopixel import NeoPixel
-        self._neopixel = NeoPixel(self._seesaw, _NEOPIXEL, n, bpp=bpp,
-                                  brightness=brightness, auto_write=auto_write,
-                                  pixel_order=pixel_order)
+        from adafruit_seesaw.neopixel import (  # pylint: disable=import-outside-toplevel
+            NeoPixel,
+        )
+
+        self._neopixel = NeoPixel(
+            self._seesaw,
+            _NEOPIXEL,
+            n,
+            bpp=bpp,
+            brightness=brightness,
+            auto_write=auto_write,
+            pixel_order=pixel_order,
+        )
+
+    @property
+    def onboard_pixel(self):
+        """```adafruit_seesaw.neopixel`` object on the Seesaw on-board NeoPixel.
+        Initialize on-board NeoPixel and clear upon first use.
+        """
+        if not self._onboard_pixel:
+            from adafruit_seesaw.neopixel import (  # pylint: disable=import-outside-toplevel
+                NeoPixel,
+            )
+
+            self._onboard_pixel = NeoPixel(
+                self._seesaw,
+                _SS_PIXEL,
+                1,
+                bpp=3,
+                brightness=1.0,
+                auto_write=True,
+                pixel_order=None,
+            )
+            self._onboard_pixel.fill((0, 0, 0))
+        return self._onboard_pixel
 
     def reset(self):
         """Reset the whole Crickit board."""
         self._seesaw.sw_reset()
 
-crickit = None # pylint: disable=invalid-name
+
+crickit = None  # pylint: disable=invalid-name
 """A singleton instance to control a single Crickit board, controlled by the default I2C pins."""
 
 # Sphinx's board is missing real pins so skip the constructor in that case.
-if "SCL" in dir(board):
-    crickit = Crickit(Seesaw(busio.I2C(board.SCL, board.SDA))) # pylint: disable=invalid-name
+if "I2C" in dir(board):
+    crickit = Crickit(Seesaw(board.I2C()))  # pylint: disable=invalid-name

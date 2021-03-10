@@ -1,25 +1,6 @@
-# The MIT License (MIT)
+# SPDX-FileCopyrightText: 2017 Dan Halbert for Adafruit Industries
 #
-# Copyright (c) 2017 Dan Halbert
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
-#
+# SPDX-License-Identifier: MIT
 
 """
 `adafruit_hid.mouse.Mouse`
@@ -28,7 +9,9 @@
 * Author(s): Dan Halbert
 """
 import time
-import usb_hid
+
+from . import find_device
+
 
 class Mouse:
     """Send USB HID mouse reports."""
@@ -40,15 +23,14 @@ class Mouse:
     MIDDLE_BUTTON = 4
     """Middle mouse button."""
 
-    def __init__(self):
-        """Create a Mouse object that will send USB mouse HID reports."""
-        self.hid_mouse = None
-        for device in usb_hid.devices:
-            if device.usage_page == 0x1 and device.usage == 0x02:
-                self.hid_mouse = device
-                break
-        if not self.hid_mouse:
-            raise IOError("Could not find an HID mouse device.")
+    def __init__(self, devices):
+        """Create a Mouse object that will send USB mouse HID reports.
+
+        Devices can be a list of devices that includes a keyboard device or a keyboard device
+        itself. A device is any object that implements ``send_report()``, ``usage_page`` and
+        ``usage``.
+        """
+        self._mouse_device = find_device(devices, usage_page=0x1, usage=0x02)
 
         # Reuse this bytearray to send mouse reports.
         # report[0] buttons pressed (LEFT, MIDDLE, RIGHT)
@@ -144,10 +126,10 @@ class Mouse:
             partial_x = self._limit(x)
             partial_y = self._limit(y)
             partial_wheel = self._limit(wheel)
-            self.report[1] = partial_x
-            self.report[2] = partial_y
-            self.report[3] = partial_wheel
-            self.hid_mouse.send_report(self.report)
+            self.report[1] = partial_x & 0xFF
+            self.report[2] = partial_y & 0xFF
+            self.report[3] = partial_wheel & 0xFF
+            self._mouse_device.send_report(self.report)
             x -= partial_x
             y -= partial_y
             wheel -= partial_wheel
@@ -157,7 +139,7 @@ class Mouse:
         self.report[1] = 0
         self.report[2] = 0
         self.report[3] = 0
-        self.hid_mouse.send_report(self.report)
+        self._mouse_device.send_report(self.report)
 
     @staticmethod
     def _limit(dist):

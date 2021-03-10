@@ -1,24 +1,7 @@
-# The MIT License (MIT)
+# SPDX-FileCopyrightText: 2018 Kevin Townsend for Adafruit Industries
 #
-# Copyright (c) 2018 Kevin Townsend for Adafruit_Industries
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
+# SPDX-License-Identifier: MIT
+
 """
 `adafruit_bluefruitspi`
 ====================================================
@@ -42,7 +25,7 @@ Implementation Notes
 * Adafruit's Bus Device library: https://github.com/adafruit/Adafruit_CircuitPython_BusDevice
 """
 
-__version__ = "1.0.2"
+__version__ = "1.1.6"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_BluefruitSPI.git"
 
 import time
@@ -51,46 +34,45 @@ from digitalio import Direction, Pull
 from adafruit_bus_device.spi_device import SPIDevice
 from micropython import const
 
-# pylint: disable=bad-whitespace
-_MSG_COMMAND   = const(0x10)  # Command message
-_MSG_RESPONSE  = const(0x20)  # Response message
-_MSG_ALERT     = const(0x40)  # Alert message
-_MSG_ERROR     = const(0x80)  # Error message
+_MSG_COMMAND = const(0x10)  # Command message
+_MSG_RESPONSE = const(0x20)  # Response message
+_MSG_ALERT = const(0x40)  # Alert message
+_MSG_ERROR = const(0x80)  # Error message
 
-_SDEP_INITIALIZE = const(0xBEEF) # Resets the Bluefruit device
-_SDEP_ATCOMMAND  = const(0x0A00) # AT command wrapper
-_SDEP_BLEUART_TX = const(0x0A01) # BLE UART transmit data
-_SDEP_BLEUART_RX = const(0x0A02) # BLE UART read data
+_SDEP_INITIALIZE = const(0xBEEF)  # Resets the Bluefruit device
+_SDEP_ATCOMMAND = const(0x0A00)  # AT command wrapper
+_SDEP_BLEUART_TX = const(0x0A01)  # BLE UART transmit data
+_SDEP_BLEUART_RX = const(0x0A02)  # BLE UART read data
 
-_ARG_STRING    = const(0x0100) # String data type
-_ARG_BYTEARRAY = const(0x0200) # Byte array data type
-_ARG_INT32     = const(0x0300) # Signed 32-bit integer data type
-_ARG_UINT32    = const(0x0400) # Unsigned 32-bit integer data type
-_ARG_INT16     = const(0x0500) # Signed 16-bit integer data type
-_ARG_UINT16    = const(0x0600) # Unsigned 16-bit integer data type
-_ARG_INT8      = const(0x0700) # Signed 8-bit integer data type
-_ARG_UINT8     = const(0x0800) # Unsigned 8-bit integer data type
+_ARG_STRING = const(0x0100)  # String data type
+_ARG_BYTEARRAY = const(0x0200)  # Byte array data type
+_ARG_INT32 = const(0x0300)  # Signed 32-bit integer data type
+_ARG_UINT32 = const(0x0400)  # Unsigned 32-bit integer data type
+_ARG_INT16 = const(0x0500)  # Signed 16-bit integer data type
+_ARG_UINT16 = const(0x0600)  # Unsigned 16-bit integer data type
+_ARG_INT8 = const(0x0700)  # Signed 8-bit integer data type
+_ARG_UINT8 = const(0x0800)  # Unsigned 8-bit integer data type
 
-_ERROR_INVALIDMSGTYPE = const(0x8021) # SDEP: Unexpected SDEP MsgType
-_ERROR_INVALIDCMDID   = const(0x8022) # SDEP: Unknown command ID
-_ERROR_INVALIDPAYLOAD = const(0x8023) # SDEP: Payload problem
-_ERROR_INVALIDLEN     = const(0x8024) # SDEP: Indicated len too large
-_ERROR_INVALIDINPUT   = const(0x8060) # AT: Invalid data
-_ERROR_UNKNOWNCMD     = const(0x8061) # AT: Unknown command name
-_ERROR_INVALIDPARAM   = const(0x8062) # AT: Invalid param value
-_ERROR_UNSUPPORTED    = const(0x8063) # AT: Unsupported command
+_ERROR_INVALIDMSGTYPE = const(0x8021)  # SDEP: Unexpected SDEP MsgType
+_ERROR_INVALIDCMDID = const(0x8022)  # SDEP: Unknown command ID
+_ERROR_INVALIDPAYLOAD = const(0x8023)  # SDEP: Payload problem
+_ERROR_INVALIDLEN = const(0x8024)  # SDEP: Indicated len too large
+_ERROR_INVALIDINPUT = const(0x8060)  # AT: Invalid data
+_ERROR_UNKNOWNCMD = const(0x8061)  # AT: Unknown command name
+_ERROR_INVALIDPARAM = const(0x8062)  # AT: Invalid param value
+_ERROR_UNSUPPORTED = const(0x8063)  # AT: Unsupported command
 
 # For the Bluefruit Connect packets
-_PACKET_BUTTON_LEN    = const(5)
-_PACKET_COLOR_LEN     = const(6)
-
-# pylint: enable=bad-whitespace
+_PACKET_BUTTON_LEN = const(5)
+_PACKET_COLOR_LEN = const(6)
 
 
 class BluefruitSPI:
     """Helper for the Bluefruit LE SPI Friend"""
 
-    def __init__(self, spi, cs, irq, reset, debug=False): # pylint: disable=too-many-arguments
+    def __init__(
+        self, spi, cs, irq, reset, debug=False
+    ):  # pylint: disable=too-many-arguments
         self._irq = irq
         self._buf_tx = bytearray(20)
         self._buf_rx = bytearray(20)
@@ -114,8 +96,7 @@ class BluefruitSPI:
         self._irq.direction = Direction.INPUT
         self._irq.pull = Pull.DOWN
 
-        self._spi_device = SPIDevice(spi, cs,
-                                     baudrate=4000000, phase=0, polarity=0)
+        self._spi_device = SPIDevice(spi, cs, baudrate=4000000, phase=0, polarity=0)
 
     def _cmd(self, cmd):  # pylint: disable=too-many-branches
         """
@@ -129,9 +110,9 @@ class BluefruitSPI:
         if len(cmd) > 127:
             if self._debug:
                 print("ERROR: Command too long.")
-            raise ValueError('Command too long.')
+            raise ValueError("Command too long.")
 
-        more = 0x80 # More bit is in pos 8, 1 = more data available
+        more = 0x80  # More bit is in pos 8, 1 = more data available
         pos = 0
         while len(cmd) - pos:
             # Construct the SDEP packet
@@ -142,9 +123,15 @@ class BluefruitSPI:
             if plen > 16:
                 plen = 16
             # Note the 'more' value in bit 8 of the packet len
-            struct.pack_into("<BHB16s", self._buf_tx, 0,
-                             _MSG_COMMAND, _SDEP_ATCOMMAND,
-                             plen | more, cmd[pos:pos+plen])
+            struct.pack_into(
+                "<BHB16s",
+                self._buf_tx,
+                0,
+                _MSG_COMMAND,
+                _SDEP_ATCOMMAND,
+                plen | more,
+                cmd[pos : pos + plen],
+            )
             if self._debug:
                 print("Writing: ", [hex(b) for b in self._buf_tx])
             else:
@@ -155,7 +142,7 @@ class BluefruitSPI:
 
             # Send out the SPI bus
             with self._spi_device as spi:
-                spi.write(self._buf_tx, end=len(cmd) + 4) # pylint: disable=no-member
+                spi.write(self._buf_tx, end=len(cmd) + 4)  # pylint: disable=no-member
 
         # Wait up to 200ms for a response
         timeout = 0.2
@@ -165,7 +152,7 @@ class BluefruitSPI:
         if timeout <= 0:
             if self._debug:
                 print("ERROR: Timed out waiting for a response.")
-            raise RuntimeError('Timed out waiting for a response.')
+            raise RuntimeError("Timed out waiting for a response.")
 
         # Retrieve the response message
         msgtype = 0
@@ -179,11 +166,11 @@ class BluefruitSPI:
                 spi.readinto(self._buf_rx)
 
             # Read the message envelope and contents
-            msgtype, rspid, rsplen = struct.unpack('>BHB', self._buf_rx)
+            msgtype, rspid, rsplen = struct.unpack(">BHB", self._buf_rx[0:4])
             if rsplen >= 16:
                 rsp += self._buf_rx[4:20]
             else:
-                rsp += self._buf_rx[4:rsplen+4]
+                rsp += self._buf_rx[4 : rsplen + 4]
             if self._debug:
                 print("Reading: ", [hex(b) for b in self._buf_rx])
             else:
@@ -200,14 +187,13 @@ class BluefruitSPI:
         This command should complete in under 1s.
         """
         # Construct the SDEP packet
-        struct.pack_into("<BHB", self._buf_tx, 0,
-                         _MSG_COMMAND, _SDEP_INITIALIZE, 0)
+        struct.pack_into("<BHB", self._buf_tx, 0, _MSG_COMMAND, _SDEP_INITIALIZE, 0)
         if self._debug:
             print("Writing: ", [hex(b) for b in self._buf_tx])
 
         # Send out the SPI bus
         with self._spi_device as spi:
-            spi.write(self._buf_tx, end=4) # pylint: disable=no-member
+            spi.write(self._buf_tx, end=4)  # pylint: disable=no-member
 
         # Wait 1 second for the command to complete.
         time.sleep(1)
@@ -215,20 +201,20 @@ class BluefruitSPI:
     @property
     def connected(self):
         """Whether the Bluefruit module is connected to the central"""
-        return int(self.command_check_OK(b'AT+GAPGETCONN')) == 1
+        return int(self.command_check_OK(b"AT+GAPGETCONN")) == 1
 
     def uart_tx(self, data):
         """
         Sends the specific bytestring out over BLE UART.
         :param data: The bytestring to send.
         """
-        return self._cmd(b'AT+BLEUARTTX='+data+b'\r\n')
+        return self._cmd(b"AT+BLEUARTTX=" + data + b"\r\n")
 
     def uart_rx(self):
         """
         Reads byte data from the BLE UART FIFO.
         """
-        data = self.command_check_OK(b'AT+BLEUARTRX')
+        data = self.command_check_OK(b"AT+BLEUARTRX")
         if data:
             # remove \r\n from ending
             return data[:-2]
@@ -237,30 +223,29 @@ class BluefruitSPI:
     def command(self, string):
         """Send a command and check response code"""
         try:
-            msgtype, msgid, rsp = self._cmd(string+"\n")
+            msgtype, msgid, rsp = self._cmd(string + "\n")
             if msgtype == _MSG_ERROR:
                 raise RuntimeError("Error (id:{0})".format(hex(msgid)))
             if msgtype == _MSG_RESPONSE:
                 return rsp
-            else:
-                raise RuntimeError("Unknown response (id:{0})".format(hex(msgid)))
+            raise RuntimeError("Unknown response (id:{0})".format(hex(msgid)))
         except RuntimeError as error:
-            raise RuntimeError("AT command failure: " + repr(error))
+            raise RuntimeError("AT command failure: " + repr(error)) from error
 
-    def command_check_OK(self, command, delay=0.0):   # pylint: disable=invalid-name
+    def command_check_OK(self, command, delay=0.0):  # pylint: disable=invalid-name
         """Send a fully formed bytestring AT command, and check
         whether we got an 'OK' back. Returns payload bytes if there is any"""
         ret = self.command(command)
         time.sleep(delay)
         if not ret or not ret[-4:]:
             raise RuntimeError("Not OK")
-        if ret[-4:] != b'OK\r\n':
+        if ret[-4:] != b"OK\r\n":
             raise RuntimeError("Not OK")
         if ret[:-4]:
             return ret[:-4]
         return None
 
-    def read_packet(self):   # pylint: disable=too-many-return-statements
+    def read_packet(self):  # pylint: disable=too-many-return-statements
         """
         Will read a Bluefruit Connect packet and return it in a parsed format.
         Currently supports Button and Color packets only
@@ -271,16 +256,16 @@ class BluefruitSPI:
         # convert to an array of character bytes
         self._buffer += [chr(b) for b in data]
         # Find beginning of new packet, starts with a '!'
-        while self._buffer and self._buffer[0] != '!':
+        while self._buffer and self._buffer[0] != "!":
             self._buffer.pop(0)
         # we need at least 2 bytes in the buffer
         if len(self._buffer) < 2:
             return None
 
         # Packet beginning found
-        if self._buffer[1] == 'B':
+        if self._buffer[1] == "B":
             plen = _PACKET_BUTTON_LEN
-        elif self._buffer[1] == 'C':
+        elif self._buffer[1] == "C":
             plen = _PACKET_COLOR_LEN
         else:
             # unknown packet type
@@ -290,16 +275,16 @@ class BluefruitSPI:
         # split packet off of buffer cache
         packet = self._buffer[0:plen]
 
-        self._buffer = self._buffer[plen:]    # remove packet from buffer
-        if sum([ord(x) for x in packet]) % 256 != 255: # check sum
+        self._buffer = self._buffer[plen:]  # remove packet from buffer
+        if sum([ord(x) for x in packet]) % 256 != 255:  # check sum
             return None
 
         # OK packet's good!
-        if packet[1] == 'B':  # buttons have 2 int args to parse
+        if packet[1] == "B":  # buttons have 2 int args to parse
             # button number & True/False press
-            return ('B', int(packet[2]), packet[3] == '1')
-        if packet[1] == 'C':  # colorpick has 3 int args to parse
+            return ("B", int(packet[2]), packet[3] == "1")
+        if packet[1] == "C":  # colorpick has 3 int args to parse
             # red, green and blue
-            return ('C', ord(packet[2]), ord(packet[3]), ord(packet[4]))
+            return ("C", ord(packet[2]), ord(packet[3]), ord(packet[4]))
         # We don't nicely parse this yet
         return packet[1:-1]

@@ -1,24 +1,7 @@
-# The MIT License (MIT)
+# SPDX-FileCopyrightText: 2016 Scott Shawcroft for Adafruit Industries
 #
-# Copyright (c) 2016 Scott Shawcroft for Adafruit Industries
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
+# SPDX-License-Identifier: MIT
+
 # pylint: disable=too-few-public-methods
 
 """
@@ -26,8 +9,9 @@
 ====================================================
 """
 
-__version__ = "2.2.10"
+__version__ = "5.0.6"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_BusDevice.git"
+
 
 class SPIDevice:
     """
@@ -65,8 +49,17 @@ class SPIDevice:
             with device as spi:
                 spi.write(bytes_read)
     """
-    def __init__(self, spi, chip_select=None, *,
-                 baudrate=100000, polarity=0, phase=0, extra_clocks=0):
+
+    def __init__(
+        self,
+        spi,
+        chip_select=None,
+        *,
+        baudrate=100000,
+        polarity=0,
+        phase=0,
+        extra_clocks=0
+    ):
         self.spi = spi
         self.baudrate = baudrate
         self.polarity = polarity
@@ -79,18 +72,19 @@ class SPIDevice:
     def __enter__(self):
         while not self.spi.try_lock():
             pass
-        self.spi.configure(baudrate=self.baudrate, polarity=self.polarity,
-                           phase=self.phase)
+        self.spi.configure(
+            baudrate=self.baudrate, polarity=self.polarity, phase=self.phase
+        )
         if self.chip_select:
             self.chip_select.value = False
         return self.spi
 
-    def __exit__(self, *exc):
+    def __exit__(self, exc_type, exc_val, exc_tb):
         if self.chip_select:
             self.chip_select.value = True
         if self.extra_clocks > 0:
             buf = bytearray(1)
-            buf[0] = 0xff
+            buf[0] = 0xFF
             clocks = self.extra_clocks // 8
             if self.extra_clocks % 8 != 0:
                 clocks += 1

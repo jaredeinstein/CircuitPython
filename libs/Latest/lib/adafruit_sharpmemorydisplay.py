@@ -1,24 +1,6 @@
-# The MIT License (MIT)
+# SPDX-FileCopyrightText: 2018 ladyada for Adafruit Industries
 #
-# Copyright (c) 2018 ladyada for Adafruit Industries
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
+# SPDX-License-Identifier: MIT
 
 # pylint: disable=line-too-long
 """
@@ -49,12 +31,13 @@ Implementation Notes
 from micropython import const
 import adafruit_framebuf
 
-__version__ = "1.0.1"
+__version__ = "1.2.7"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_SharpMemoryDisplay.git"
 
 _SHARPMEM_BIT_WRITECMD = const(0x80)  # in lsb
 _SHARPMEM_BIT_VCOM = const(0x40)  # in lsb
 _SHARPMEM_BIT_CLEAR = const(0x20)  # in lsb
+
 
 def reverse_bit(num):
     """Turn an LSB byte to an MSB byte, and vice versa. Used for SPI as
@@ -62,7 +45,7 @@ def reverse_bit(num):
     result = 0
     for _ in range(8):
         result <<= 1
-        result += (num & 1)
+        result += num & 1
         num >>= 1
     return result
 
@@ -70,9 +53,10 @@ def reverse_bit(num):
 class SharpMemoryDisplay(adafruit_framebuf.FrameBuffer):
     """A driver for sharp memory displays, you can use any size but the
     full display must be buffered in memory!"""
+
     # pylint: disable=too-many-instance-attributes,abstract-method
 
-    def __init__(self, spi, scs_pin, width, height, *, baudrate=16000000):
+    def __init__(self, spi, scs_pin, width, height, *, baudrate=2000000):
         self._scs_pin = scs_pin
         scs_pin.switch_to_output(value=True)
         self._baudrate = baudrate
@@ -108,11 +92,11 @@ class SharpMemoryDisplay(adafruit_framebuf.FrameBuffer):
         self._spi.write(self._buf)
 
         slice_from = 0
-        line_len = self.width//8
+        line_len = self.width // 8
         for line in range(self.height):
-            self._buf[0] = reverse_bit(line+1)
+            self._buf[0] = reverse_bit(line + 1)
             self._spi.write(self._buf)
-            self._spi.write(memoryview(self.buffer[slice_from:slice_from+line_len]))
+            self._spi.write(memoryview(self.buffer[slice_from : slice_from + line_len]))
             slice_from += line_len
             self._buf[0] = 0
             self._spi.write(self._buf)

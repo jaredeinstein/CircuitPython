@@ -1,24 +1,7 @@
-# The MIT License (MIT)
+# SPDX-FileCopyrightText: 2017 Tony DiCola for Adafruit Industries
 #
-# Copyright (c) 2017 Tony DiCola for Adafruit Industries
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
+# SPDX-License-Identifier: MIT
+
 """
 `adafruit_max9744`
 ====================================================
@@ -43,19 +26,17 @@ Implementation Notes
 """
 from micropython import const
 
-__version__ = "1.1.2"
+__version__ = "1.2.6"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_MAX9744.git"
 
 
-#pylint: disable=bad-whitespace
 # Internal constants:
-_MAX9744_DEFAULT_ADDRESS     = const(0b01001011)
-_MAX9744_COMMAND_VOLUME      = const(0b00000000)
-_MAX9744_COMMAND_FILTERLESS  = const(0b01000000)
+_MAX9744_DEFAULT_ADDRESS = const(0b01001011)
+_MAX9744_COMMAND_VOLUME = const(0b00000000)
+_MAX9744_COMMAND_FILTERLESS = const(0b01000000)
 _MAX9744_COMMAND_CLASSIC_PWM = const(0b01000001)
-_MAX9744_COMMAND_VOLUME_UP   = const(0b11000100)
+_MAX9744_COMMAND_VOLUME_UP = const(0b11000100)
 _MAX9744_COMMAND_VOLUME_DOWN = const(0b11000101)
-#pylint: enable=bad-whitespace
 
 
 class MAX9744:
@@ -97,9 +78,13 @@ class MAX9744:
         assert 0 <= volume <= 63
         self._write(_MAX9744_COMMAND_VOLUME | (volume & 0x3F))
 
-    #pylint: disable=line-too-long
-    volume = property(None, _set_volume, "Set the volume of the amplifier.  Specify a value from 0-63 where 0 is muted/off and 63 is maximum volume.")
-    #pylint: enable=line-too-long
+    # pylint: disable=line-too-long
+    volume = property(
+        None,
+        _set_volume,
+        "Set the volume of the amplifier.  Specify a value from 0-63 where 0 is muted/off and 63 is maximum volume.",
+    )
+    # pylint: enable=line-too-long
 
     def volume_up(self):
         """Increase the volume by one level."""

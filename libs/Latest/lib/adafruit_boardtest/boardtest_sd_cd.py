@@ -1,24 +1,7 @@
-# The MIT License (MIT)
+# SPDX-FileCopyrightText: 2018 Shawn Hymel for Adafruit Industries
 #
-# Copyright (c) 2018 Shawn Hymel for Adafruit Industries
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
+# SPDX-License-Identifier: MIT
+
 """
 `adafruit_boardtest.boardtest_sd_cd`
 ====================================================
@@ -46,16 +29,17 @@ Implementation Notes
 import board
 import digitalio
 
-__version__ = "1.0.1"
+__version__ = "1.2.5"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_BoardTest.git"
 
 # Constants
-SD_CD_PIN_NAME = 'SD_CD'
+SD_CD_PIN_NAME = "SD_CD"
 
 # Test result strings
 PASS = "PASS"
 FAIL = "FAIL"
 NA = "N/A"
+
 
 def run_test(pins, cd_pin=SD_CD_PIN_NAME):
 
@@ -107,20 +91,21 @@ def run_test(pins, cd_pin=SD_CD_PIN_NAME):
 def _main():
 
     # List out all the pins available to us
-    pins = [p for p in dir(board)]
+    pins = list(dir(board))
     print()
-    print("All pins found:", end=' ')
+    print("All pins found:", end=" ")
 
     # Print pins
     for pin in pins:
-        print(pin, end=' ')
-    print('\n')
+        print(pin, end=" ")
+    print("\n")
 
     # Run test
     result = run_test(pins)
     print()
     print(result[0])
     print("Pins tested: " + str(result[1]))
+
 
 # Execute only if run as main.py or code.py
 if __name__ == "__main__":

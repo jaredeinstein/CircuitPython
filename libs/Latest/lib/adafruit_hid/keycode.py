@@ -1,25 +1,6 @@
-# The MIT License (MIT)
+# SPDX-FileCopyrightText: 2017 Scott Shawcroft for Adafruit Industries
 #
-# Copyright (c) 2017 Scott Shawcroft for Adafruit Industries
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
-#
+# SPDX-License-Identifier: MIT
 
 """
 `adafruit_hid.keycode.Keycode`
@@ -28,12 +9,13 @@
 * Author(s): Scott Shawcroft, Dan Halbert
 """
 
+
 class Keycode:
     """USB HID Keycode constants.
 
     This list is modeled after the names for USB keycodes defined in
-    http://www.usb.org/developers/hidpage/Hut1_12v2.pdf#page=58.
-    THis list does not include every single code, but does include all the keys on
+    https://usb.org/sites/default/files/hut1_21_0.pdf#page=83.
+    This list does not include every single code, but does include all the keys on
     a regular PC or Mac keyboard.
 
     Remember that keycodes are the names for key *positions* on a US keyboard, and may
@@ -44,7 +26,8 @@ class Keycode:
     without changing the keycodes sent, so that different firmware was not needed for
     different variations of a keyboard.
     """
-    #pylint: disable-msg=invalid-name
+
+    # pylint: disable-msg=invalid-name
     A = 0x04
     """``a`` and ``A``"""
     B = 0x05
@@ -303,9 +286,11 @@ class Keycode:
     RIGHT_GUI = 0xE7
     """GUI modifier right of the spacebar"""
 
-    #pylint: enable-msg=invalid-name
+    # pylint: enable-msg=invalid-name
     @classmethod
     def modifier_bit(cls, keycode):
         """Return the modifer bit to be set in an HID keycode report if this is a
         modifier key; otherwise return 0."""
-        return 1 << (keycode - 0xE0) if cls.LEFT_CONTROL <= keycode <= cls.RIGHT_GUI else 0
+        return (
+            1 << (keycode - 0xE0) if cls.LEFT_CONTROL <= keycode <= cls.RIGHT_GUI else 0
+        )

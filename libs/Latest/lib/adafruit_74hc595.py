@@ -1,24 +1,7 @@
-# The MIT License (MIT)
+# SPDX-FileCopyrightText: 2018 Kattni Rembor for Adafruit Industries
 #
-# Copyright (c) 2018 Kattni Rembor for Adafruit Industries
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
+# SPDX-License-Identifier: MIT
+
 """
 `adafruit_74hc595`
 ====================================================
@@ -45,10 +28,8 @@ Implementation Notes
 import digitalio
 import adafruit_bus_device.spi_device as spi_device
 
-__version__ = "1.0.2"
+__version__ = "1.2.4"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_74HC595.git"
-
-
 
 
 class DigitalInOut:
@@ -77,7 +58,8 @@ class DigitalInOut:
 
     def switch_to_input(self, **kwargs):  # pylint: disable=no-self-use
         """``switch_to_input`` is not supported."""
-        raise RuntimeError('Digital input not supported.')
+        raise RuntimeError("Digital input not supported.")
+
     # pylint: enable=unused-argument
 
     @property
@@ -89,7 +71,7 @@ class DigitalInOut:
     def value(self, val):
         gpio = self._shift_register.gpio
         if val:
-            gpio |= (1 << self._pin)
+            gpio |= 1 << self._pin
         else:
             gpio &= ~(1 << self._pin)
         self._shift_register.gpio = gpio
@@ -103,7 +85,7 @@ class DigitalInOut:
     def direction(self, val):  # pylint: disable=no-self-use
         """``Direction`` can only be set to ``OUTPUT``."""
         if val != digitalio.Direction.OUTPUT:
-            raise RuntimeError('Digital input not supported.')
+            raise RuntimeError("Digital input not supported.")
 
     @property
     def pull(self):
@@ -114,11 +96,12 @@ class DigitalInOut:
     def pull(self, val):  # pylint: disable=no-self-use
         """Only supports null/no pull state."""
         if val is not None:
-            raise RuntimeError('Pull-up and pull-down not supported.')
+            raise RuntimeError("Pull-up and pull-down not supported.")
 
 
 class ShiftRegister74HC595:
     """Initialise the 74HC595 on specified SPI bus."""
+
     def __init__(self, spi, latch):
         self._device = spi_device.SPIDevice(spi, latch, baudrate=1000000)
         self._gpio = bytearray(1)

@@ -1,25 +1,6 @@
-# The MIT License (MIT)
+# SPDX-FileCopyrightText: 2018 Dan Halbert for Adafruit Industries
 #
-# Copyright (c) 2018 Dan Halbert for Adafruit Industries
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
-#
+# SPDX-License-Identifier: MIT
 
 """
 `adafruit_hid.gamepad.Gamepad`
@@ -28,14 +9,11 @@
 * Author(s): Dan Halbert
 """
 
-import sys
-if sys.implementation.version[0] < 3:
-    raise ImportError('{0} is not supported in CircuitPython 2.x or lower'.format(__name__))
-
-# pylint: disable=wrong-import-position
 import struct
 import time
-import usb_hid
+
+from . import find_device
+
 
 class Gamepad:
     """Emulate a generic gamepad controller with 16 buttons,
@@ -45,18 +23,16 @@ class Gamepad:
 
     The joystick values could be interpreted
     differently by the receiving program: those are just the names used here.
-    The joystick values are in the range -127 to 127.
-"""
+    The joystick values are in the range -127 to 127."""
 
-    def __init__(self):
-        """Create a Gamepad object that will send USB gamepad HID reports."""
-        self._hid_gamepad = None
-        for device in usb_hid.devices:
-            if device.usage_page == 0x1 and device.usage == 0x05:
-                self._hid_gamepad = device
-                break
-        if not self._hid_gamepad:
-            raise IOError("Could not find an HID gampead device.")
+    def __init__(self, devices):
+        """Create a Gamepad object that will send USB gamepad HID reports.
+
+        Devices can be a list of devices that includes a gamepad device or a gamepad device
+        itself. A device is any object that implements ``send_report()``, ``usage_page`` and
+        ``usage``.
+        """
+        self._gamepad_device = find_device(devices, usage_page=0x1, usage=0x05)
 
         # Reuse this bytearray to send mouse reports.
         # Typically controllers start numbering buttons at 1 rather than 0.
@@ -152,13 +128,19 @@ class Gamepad:
         """Send a report with all the existing settings.
         If ``always`` is ``False`` (the default), send only if there have been changes.
         """
-        struct.pack_into('<HBBBB', self._report, 0,
-                         self._buttons_state,
-                         self._joy_x, self._joy_y,
-                         self._joy_z, self._joy_r_z)
+        struct.pack_into(
+            "<Hbbbb",
+            self._report,
+            0,
+            self._buttons_state,
+            self._joy_x,
+            self._joy_y,
+            self._joy_z,
+            self._joy_r_z,
+        )
 
         if always or self._last_report != self._report:
-            self._hid_gamepad.send_report(self._report)
+            self._gamepad_device.send_report(self._report)
             # Remember what we sent, without allocating new storage.
             self._last_report[:] = self._report
 

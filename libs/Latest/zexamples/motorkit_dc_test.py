@@ -1,7 +1,11 @@
+# SPDX-FileCopyrightText: 2021 ladyada for Adafruit Industries
+# SPDX-License-Identifier: MIT
+
 import time
+import board
 from adafruit_motorkit import MotorKit
 
-kit = MotorKit()
+kit = MotorKit(i2c=board.I2C())
 
 kit.motor1.throttle = 0
 

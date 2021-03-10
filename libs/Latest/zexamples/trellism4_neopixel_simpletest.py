@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2021 ladyada for Adafruit Industries
+# SPDX-License-Identifier: MIT
+
 """Test your Trellis M4 Express without needing the serial output.
 Press any button and the rest will light up the same color!"""
 import time
@@ -20,7 +23,7 @@ def wheel(pos):
 
 for x in range(trellis.pixels.width):
     for y in range(trellis.pixels.height):
-        pixel_index = (((y * 8) + x) * 256 // 32)
+        pixel_index = ((y * 8) + x) * 256 // 32
         trellis.pixels[x, y] = wheel(pixel_index & 255)
 
 
@@ -31,14 +34,14 @@ while True:
         if press:
             print("Pressed:", press)
             pixel = (press[1] * 8) + press[0]
-            pixel_index = (pixel * 256 // 32)
+            pixel_index = pixel * 256 // 32
             trellis.pixels.fill(wheel(pixel_index & 255))
     for release in current_press - pressed:
         if release:
             print("Released:", release)
             for x in range(trellis.pixels.width):
                 for y in range(trellis.pixels.height):
-                    pixel_index = (((y * 8) + x) * 256 // 32)
+                    pixel_index = ((y * 8) + x) * 256 // 32
                     trellis.pixels[x, y] = wheel(pixel_index & 255)
     time.sleep(0.08)
     current_press = pressed

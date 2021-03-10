@@ -1,24 +1,7 @@
-# The MIT License (MIT)
+# SPDX-FileCopyrightText: 2019 Melissa LeBlanc-Williams for Adafruit Industries
 #
-# Copyright (c) 2019 Melissa LeBlanc-Williams for Adafruit Industries
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
+# SPDX-License-Identifier: MIT
+
 """
 `adafruit_ra8875.ra8875`
 ====================================================
@@ -54,27 +37,40 @@ try:
 except ImportError:
     import ustruct as struct
 
-__version__ = "1.0.4"
+__version__ = "3.1.5"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_RA8875.git"
 
-#pylint: disable-msg=invalid-name
+# pylint: disable-msg=invalid-name
 def color565(r, g=0, b=0):
     """Convert red, green and blue values (0-255) into a 16-bit 565 encoding."""
     try:
         r, g, b = r  # see if the first var is a tuple/list
     except TypeError:
         pass
-    return (r & 0xf8) << 8 | (g & 0xfc) << 3 | b >> 3
-#pylint: enable-msg=invalid-name
+    return (r & 0xF8) << 8 | (g & 0xFC) << 3 | b >> 3
 
-class RA8875_Device(object):
+
+# pylint: enable-msg=invalid-name
+
+
+class RA8875_Device:
     """
     Base Class for the Display. Contains all the low level stuff. As well
     as the touch functions. Valid display sizes are currently 800x480 and 480x272.
     """
-    #pylint: disable-msg=invalid-name,too-many-arguments
-    def __init__(self, spi, cs, rst=None, width=800, height=480,
-                 baudrate=6000000, polarity=0, phase=0):
+
+    # pylint: disable-msg=invalid-name,too-many-arguments
+    def __init__(
+        self,
+        spi,
+        cs,
+        rst=None,
+        width=800,
+        height=480,
+        baudrate=6000000,
+        polarity=0,
+        phase=0,
+    ):
         """
         :param SPI spi: The spi peripheral to use
         :param DigitalInOut cs: The chip-select pin to use (sometimes labeled "SS")
@@ -85,20 +81,26 @@ class RA8875_Device(object):
         :param int phase: (optional) The spi phase (default=0)
         :param int polarity: (optional) The spi polarity (default=0)
         """
-        self.spi_device = spi_device.SPIDevice(spi, cs, baudrate=baudrate,
-                                               polarity=polarity, phase=phase)
+        self.spi_device = spi_device.SPIDevice(
+            spi, cs, baudrate=baudrate, polarity=polarity, phase=phase
+        )
+        # Display advertised as 480x80 is actually 480x82
+        if width == 480 and height == 80:
+            height = 82
         self.width = width
         self.height = height
         self._mode = None
         self._tpin = None
         self.rst = rst
+        self.vert_offset = 0
         if self.rst:
             self.rst.switch_to_output(value=0)
             self.reset()
-        if self.read_reg(0) == 0x75:
+        if self._read_reg(0) == 0x75:
             return
         self._adc_clk = reg.TPCR0_ADCCLK_DIV16
-    #pylint: enable-msg=invalid-name,too-many-arguments
+
+    # pylint: enable-msg=invalid-name,too-many-arguments
 
     def init(self, start_on=True):
         """
@@ -106,6 +108,9 @@ class RA8875_Device(object):
 
         :param bool start_on: (optional) If the display should start in an On State (default=True)
         """
+        if self.width == 480 and self.height == 82:
+            self.vert_offset = 190
+
         if self.width == 800 and self.height == 480:
             pixclk = reg.PCSR_PDATL | reg.PCSR_2CLK
             hsync_nondisp = 26
@@ -114,7 +119,9 @@ class RA8875_Device(object):
             vsync_nondisp = 32
             vsync_start = 23
             vsync_pw = 2
-        elif self.width == 480 and self.height == 272:
+        elif self.width == 480 and (
+            self.height == 272 or self.height == 128 or self.height == 82
+        ):
             pixclk = reg.PCSR_PDATL | reg.PCSR_4CLK
             hsync_nondisp = 10
             hsync_start = 8
@@ -124,44 +131,37 @@ class RA8875_Device(object):
             vsync_pw = 10
             self._adc_clk = reg.TPCR0_ADCCLK_DIV4
         else:
-            raise ValueError('An invalid display size was specified.')
+            raise ValueError("An invalid display size was specified.")
 
         self.pllinit()
 
-        self.write_reg(reg.SYSR, reg.SYSR_16BPP | reg.SYSR_MCU8)
-        self.write_reg(reg.PCSR, pixclk)
+        self._write_reg(reg.SYSR, reg.SYSR_16BPP | reg.SYSR_MCU8)
+        self._write_reg(reg.PCSR, pixclk)
         time.sleep(0.001)
 
         # Horizontal settings registers
-        self.write_reg(reg.HDWR, self.width // 8 - 1)
-        self.write_reg(reg.HNDFTR, reg.HNDFTR_DE_HIGH)
-        self.write_reg(reg.HNDR, (hsync_nondisp - 2) // 8)
-        self.write_reg(reg.HSTR, hsync_start // 8 - 1)
-        self.write_reg(reg.HPWR, reg.HPWR_LOW + hsync_pw // 8 - 1)
+        self._write_reg(reg.HDWR, self.width // 8 - 1)
+        self._write_reg(reg.HNDFTR, reg.HNDFTR_DE_HIGH)
+        self._write_reg(reg.HNDR, (hsync_nondisp - 2) // 8)
+        self._write_reg(reg.HSTR, hsync_start // 8 - 1)
+        self._write_reg(reg.HPWR, reg.HPWR_LOW + hsync_pw // 8 - 1)
 
         # Vertical settings registers
-        self.write_reg(reg.VDHR0, (self.height - 1) & 0xFF)
-        self.write_reg(reg.VDHR1, (self.height - 1) >> 8)
-        self.write_reg(reg.VNDR0, vsync_nondisp - 1)
-        self.write_reg(reg.VNDR1, vsync_nondisp >> 8)
-        self.write_reg(reg.VSTR0, vsync_start - 1)
-        self.write_reg(reg.VSTR1, vsync_start >> 8)
-        self.write_reg(reg.VPWR, reg.VPWR_LOW + vsync_pw - 1)
+        self._write_reg16(reg.VDHR0, self.height - 1 + self.vert_offset)
+        self._write_reg16(reg.VNDR0, vsync_nondisp - 1)
+        self._write_reg16(reg.VSTR0, vsync_start - 1)
+        self._write_reg(reg.VPWR, reg.VPWR_LOW + vsync_pw - 1)
 
         # Set active window X
-        self.write_reg(reg.HSAW0, 0)
-        self.write_reg(reg.HSAW1, 0)
-        self.write_reg(reg.HEAW0, (self.width - 1) & 0xFF)
-        self.write_reg(reg.HEAW1, (self.width - 1) >> 8)
+        self._write_reg16(reg.HSAW0, 0)
+        self._write_reg16(reg.HEAW0, self.width - 1)
 
         # Set active window Y
-        self.write_reg(reg.VSAW0, 0)
-        self.write_reg(reg.VSAW1, 0)
-        self.write_reg(reg.VEAW0, (self.height - 1) & 0xFF)
-        self.write_reg(reg.VEAW1, (self.height - 1) >> 8)
+        self._write_reg16(reg.VSAW0, self.vert_offset)
+        self._write_reg16(reg.VEAW0, self.height - 1 + self.vert_offset)
 
         # Clear the entire window
-        self.write_reg(reg.MCLR, reg.MCLR_START | reg.MCLR_FULL)
+        self._write_reg(reg.MCLR, reg.MCLR_START | reg.MCLR_FULL)
         time.sleep(0.500)
 
         # Turn the display on, enable GPIO, and setup the backlight
@@ -172,12 +172,12 @@ class RA8875_Device(object):
 
     def pllinit(self):
         """Init the Controller PLL"""
-        self.write_reg(reg.PLLC1, reg.PLLC1_PLLDIV1 + 11)
+        self._write_reg(reg.PLLC1, reg.PLLC1_PLLDIV1 + 11)
         time.sleep(0.001)
-        self.write_reg(reg.PLLC2, reg.PLLC2_DIV4)
+        self._write_reg(reg.PLLC2, reg.PLLC2_DIV4)
         time.sleep(0.001)
 
-    def write_reg(self, cmd, data, raw=False):
+    def _write_reg(self, cmd, data, raw=False):
         """
         Select a Register and write a byte or push raw data out
 
@@ -186,10 +186,23 @@ class RA8875_Device(object):
         :type data: byte or bytearray
         :param bool raw: (optional) Is the data a raw bytearray (default=False)
         """
-        self.write_cmd(cmd)
-        self.write_data(data, raw)
+        self._write_cmd(cmd)
+        self._write_data(data, raw)
 
-    def write_cmd(self, cmd):
+    def _write_reg16(self, cmd, data):
+        """
+        Select a Register and write 2 bytes or push raw data out
+
+        :param byte cmd: The register to select
+        :param data: The byte to write to the register
+        :type data: byte or bytearray
+        """
+        self._write_cmd(cmd)
+        self._write_data(data)
+        self._write_cmd(cmd + 1)
+        self._write_data(data >> 8)
+
+    def _write_cmd(self, cmd):
         """
         Select a Register/Command
 
@@ -197,9 +210,9 @@ class RA8875_Device(object):
         """
         with self.spi_device as spi:
             spi.write(reg.CMDWR)  # pylint: disable=no-member
-            spi.write(bytearray([cmd]))  # pylint: disable=no-member
+            spi.write(bytearray([cmd & 0xFF]))  # pylint: disable=no-member
 
-    def write_data(self, data, raw=False):
+    def _write_data(self, data, raw=False):
         """
         Write a byte or push raw data out
 
@@ -209,9 +222,13 @@ class RA8875_Device(object):
         """
         with self.spi_device as spi:
             spi.write(reg.DATWR)  # pylint: disable=no-member
-            spi.write(data if raw else bytearray([data]))  # pylint: disable=no-member
+            if raw and isinstance(data, str):
+                data = bytes(data, "utf8")
+            spi.write(
+                data if raw else bytearray([data & 0xFF])
+            )  # pylint: disable=no-member
 
-    def read_reg(self, cmd):
+    def _read_reg(self, cmd):
         """
         Select a Register and read a byte
 
@@ -219,10 +236,10 @@ class RA8875_Device(object):
         :return: The results of the register
         :rtype: byte
         """
-        self.write_cmd(cmd)
-        return self.read_data()
+        self._write_cmd(cmd)
+        return self._read_data()
 
-    def read_data(self):
+    def _read_data(self):
         """
         Read the data of the previously selected register
 
@@ -235,7 +252,7 @@ class RA8875_Device(object):
             spi.readinto(data)  # pylint: disable=no-member
             return struct.unpack(">B", data)[0]
 
-    def wait_poll(self, register, mask):
+    def _wait_poll(self, register, mask):
         """
         Keep checking a status bit and wait for an operation to complete.
         After 20ms, a timeout will occur and the function will stop waiting.
@@ -248,7 +265,7 @@ class RA8875_Device(object):
         start = int(round(time.time() * 1000))
         while True:
             time.sleep(0.001)
-            regval = self.read_reg(register)
+            regval = self._read_reg(register)
             if regval & mask == 0:
                 return True
             millis = int(round(time.time() * 1000))
@@ -261,8 +278,10 @@ class RA8875_Device(object):
 
         :param bool start_on: If the display should turn on or off
         """
-        self.write_reg(reg.PWRR, reg.PWRR_NORMAL |
-                       (reg.PWRR_DISPON if display_on else reg.PWRR_DISPOFF))
+        self._write_reg(
+            reg.PWRR,
+            reg.PWRR_NORMAL | (reg.PWRR_DISPON if display_on else reg.PWRR_DISPOFF),
+        )
 
     def reset(self):
         """Perform a hard reset"""
@@ -273,8 +292,8 @@ class RA8875_Device(object):
 
     def soft_reset(self):
         """Perform a soft reset"""
-        self.write_reg(reg.PWRR, reg.PWRR_SOFTRESET)
-        self.write_data(reg.PWRR_NORMAL)
+        self._write_reg(reg.PWRR, reg.PWRR_SOFTRESET)
+        self._write_data(reg.PWRR_NORMAL)
         time.sleep(0.001)
 
     def sleep(self, sleep):
@@ -283,11 +302,13 @@ class RA8875_Device(object):
 
         :param bool sleep: Should we enable sleep mode
         """
-        self.write_reg(reg.PWRR, reg.PWRR_DISPOFF if sleep else (reg.PWRR_DISPOFF | reg.PWRR_SLEEP))
+        self._write_reg(
+            reg.PWRR, reg.PWRR_DISPOFF if sleep else (reg.PWRR_DISPOFF | reg.PWRR_SLEEP)
+        )
 
     def _gpiox(self, gpio_on):
         """Enable or Disable the RA8875 GPIOs"""
-        self.write_reg(reg.GPIOX, 1 if gpio_on else 0)
+        self._write_reg(reg.GPIOX, 1 if gpio_on else 0)
 
     def _pwm1_config(self, pwm_on, clock):
         """
@@ -296,7 +317,9 @@ class RA8875_Device(object):
         :param bool pwm_on: Should we enable the Backlight PWM
         :param byte clock: Clock Divider to use for PWM Speed
         """
-        self.write_reg(reg.P1CR, (reg.P1CR_ENABLE if pwm_on else reg.P1CR_DISABLE) | (clock & 0xF))
+        self._write_reg(
+            reg.P1CR, (reg.P1CR_ENABLE if pwm_on else reg.P1CR_DISABLE) | (clock & 0xF)
+        )
 
     def brightness(self, level):
         """
@@ -304,7 +327,7 @@ class RA8875_Device(object):
 
         :param byte level: The PWM Duty Cycle
         """
-        self.write_reg(reg.P1DCR, level)
+        self._write_reg(reg.P1DCR, level)
 
     def touch_init(self, tpin=None, enable=True):
         """
@@ -316,7 +339,7 @@ class RA8875_Device(object):
         if tpin is not None:
             tpin.direction = Direction.INPUT
         self._tpin = tpin
-        self.write_reg(reg.INTC2, reg.INTC2_TP)
+        self._write_reg(reg.INTC2, reg.INTC2_TP)
         self.touch_enable(enable)
 
     def touch_enable(self, touch_on):
@@ -326,13 +349,18 @@ class RA8875_Device(object):
         :param bool touch_on: Enable/Disable the Touch Functionality
         """
         if touch_on:
-            self.write_reg(reg.TPCR0, reg.TPCR0_ENABLE | reg.TPCR0_WAIT_4096CLK |
-                           reg.TPCR0_WAKEENABLE | self._adc_clk)
-            self.write_reg(reg.TPCR1, reg.TPCR1_AUTO | reg.TPCR1_DEBOUNCE)
-            self.write_data(self.read_reg(reg.INTC1) | reg.INTC1_TP)
+            self._write_reg(
+                reg.TPCR0,
+                reg.TPCR0_ENABLE
+                | reg.TPCR0_WAIT_4096CLK
+                | reg.TPCR0_WAKEENABLE
+                | self._adc_clk,
+            )
+            self._write_reg(reg.TPCR1, reg.TPCR1_AUTO | reg.TPCR1_DEBOUNCE)
+            self._write_data(self._read_reg(reg.INTC1) | reg.INTC1_TP)
         else:
-            self.write_data(self.read_reg(reg.INTC1) & ~reg.INTC1_TP)
-            self.write_reg(reg.TPCR0, reg.TPCR0_DISABLE)
+            self._write_data(self._read_reg(reg.INTC1) & ~reg.INTC1_TP)
+            self._write_reg(reg.TPCR0, reg.TPCR0_DISABLE)
 
     def touched(self):
         """
@@ -343,10 +371,10 @@ class RA8875_Device(object):
         :rtype: bool
         """
         if self._tpin is not None:
-            self._gfx_mode() # Hack that seems to work
+            self._gfx_mode()  # Hack that seems to work
             if self._tpin.value:
                 return False
-        istouched = True if self.read_reg(reg.INTC2) & reg.INTC2_TP else False
+        istouched = self._read_reg(reg.INTC2) & reg.INTC2_TP
         return istouched
 
     def touch_read(self):
@@ -356,30 +384,31 @@ class RA8875_Device(object):
         :return: The coordinate of the detected touch
         :rtype: tuple[int, int]
         """
-        touch_x = self.read_reg(reg.TPXH)
-        touch_y = self.read_reg(reg.TPYH)
-        temp = self.read_reg(reg.TPXYL)
+        touch_x = self._read_reg(reg.TPXH)
+        touch_y = self._read_reg(reg.TPYH)
+        temp = self._read_reg(reg.TPXYL)
         touch_x = touch_x << 2
         touch_y = touch_y << 2
         touch_x |= temp & 0x03
         touch_y |= (temp >> 2) & 0x03
-        self.write_reg(reg.INTC2, reg.INTC2_TP)
+        self._write_reg(reg.INTC2, reg.INTC2_TP)
         return [touch_x, touch_y]
 
     def _gfx_mode(self):
         """Set to Graphics Mode"""
         if self._mode == "gfx":
             return
-        self.write_data(self.read_reg(reg.MWCR0) & ~reg.MWCR0_TXTMODE)
+        self._write_data(self._read_reg(reg.MWCR0) & ~reg.MWCR0_TXTMODE)
         self._mode = "gfx"
 
     def _txt_mode(self):
         """Set to Text Mode"""
         if self._mode == "txt":
             return
-        self.write_data(self.read_reg(reg.MWCR0) | reg.MWCR0_TXTMODE)
-        self.write_data(self.read_reg(reg.FNCR0) & ~((1<<7) | (1<<5)))
+        self._write_data(self._read_reg(reg.MWCR0) | reg.MWCR0_TXTMODE)
+        self._write_data(self._read_reg(reg.FNCR0) & ~((1 << 7) | (1 << 5)))
         self._mode = "txt"
+
 
 class RA8875Display(RA8875_Device):
     """
@@ -395,13 +424,23 @@ class RA8875Display(RA8875_Device):
     :param int phase: (optional) The spi phase (default=0)
     :param int polarity: (optional) The spi polarity (default=0)
     """
-    #pylint: disable-msg=invalid-name,too-many-arguments
-    def __init__(self, spi, cs, rst=None, width=800, height=480,
-                 baudrate=6000000, polarity=0, phase=0):
+
+    # pylint: disable-msg=invalid-name,too-many-arguments
+    def __init__(
+        self,
+        spi,
+        cs,
+        rst=None,
+        width=800,
+        height=480,
+        baudrate=6000000,
+        polarity=0,
+        phase=0,
+    ):
         self._txt_scale = 0
-        super(RA8875Display, self).__init__(spi, cs, rst, width, height,
-                                            baudrate, polarity, phase)
-    #pylint: too-many-arguments
+        super().__init__(spi, cs, rst, width, height, baudrate, polarity, phase)
+
+    # pylint: disable=too-many-arguments
 
     def txt_set_cursor(self, x, y):
         """
@@ -411,11 +450,10 @@ class RA8875Display(RA8875_Device):
         :param int y: The Y coordinate to set the cursor
         """
         self._txt_mode()
-        self.write_reg(0x2A, x & 0xFF)
-        self.write_reg(0x2B, x >> 8)
-        self.write_reg(0x2C, y & 0xFF)
-        self.write_reg(0x2D, y >> 8)
-    #pylint: enable-msg=invalid-name
+        self._write_reg16(0x2A, x)
+        self._write_reg16(0x2C, y + self.vert_offset)
+
+    # pylint: enable-msg=invalid-name
 
     def txt_color(self, fgcolor, bgcolor):
         """
@@ -426,7 +464,7 @@ class RA8875Display(RA8875_Device):
         """
         self.set_color(fgcolor)
         self.set_bgcolor(bgcolor)
-        self.write_data(self.read_reg(reg.FNCR1) & ~(1<<6))
+        self._write_data(self._read_reg(reg.FNCR1) & ~(1 << 6))
 
     def txt_trans(self, color):
         """
@@ -436,7 +474,7 @@ class RA8875Display(RA8875_Device):
         """
         self._txt_mode()
         self.set_color(color)
-        self.write_data(self.read_reg(reg.FNCR1) | 1<<6)
+        self._write_data(self._read_reg(reg.FNCR1) | 1 << 6)
 
     def txt_size(self, scale):
         """
@@ -447,7 +485,7 @@ class RA8875Display(RA8875_Device):
         self._txt_mode()
         if scale > 3:
             scale = 3
-        self.write_data((self.read_reg(reg.FNCR1) & ~(0xF)) | (scale << 2) | scale)
+        self._write_data((self._read_reg(reg.FNCR1) & ~(0xF)) | (scale << 2) | scale)
         self._txt_scale = scale
 
     def txt_write(self, string):
@@ -457,13 +495,13 @@ class RA8875Display(RA8875_Device):
         :param str string: The text string to write
         """
         self._txt_mode()
-        self.write_cmd(reg.MRWC)
+        self._write_cmd(reg.MRWC)
         for char in string:
-            self.write_data(char, True)
+            self._write_data(char, True)
             if self._txt_scale > 0:
                 time.sleep(0.001)
 
-    #pylint: disable-msg=invalid-name
+    # pylint: disable-msg=invalid-name
     def setxy(self, x, y):
         """
         Set the X and Y coordinates of the Graphic Cursor
@@ -472,11 +510,10 @@ class RA8875Display(RA8875_Device):
         :param int y: The Y coordinate to set the cursor
         """
         self._gfx_mode()
-        self.write_reg(reg.CURH0, x)
-        self.write_reg(reg.CURH1, x >> 8)
-        self.write_reg(reg.CURV0, y)
-        self.write_reg(reg.CURV1, y >> 8)
-    #pylint: enable-msg=invalid-name
+        self._write_reg16(reg.CURH0, x)
+        self._write_reg16(reg.CURV0, y + self.vert_offset)
+
+    # pylint: enable-msg=invalid-name
 
     def set_bgcolor(self, color):
         """
@@ -484,9 +521,9 @@ class RA8875Display(RA8875_Device):
 
         :param int color: The color behind the text
         """
-        self.write_reg(0x60, (color & 0xf800) >> 11)
-        self.write_reg(0x61, (color & 0x07e0) >> 5)
-        self.write_reg(0x62, (color & 0x001f))
+        self._write_reg(0x60, (color & 0xF800) >> 11)
+        self._write_reg(0x61, (color & 0x07E0) >> 5)
+        self._write_reg(0x62, (color & 0x001F))
 
     def set_color(self, color):
         """
@@ -494,11 +531,11 @@ class RA8875Display(RA8875_Device):
 
         :param int color: The of the text or graphics
         """
-        self.write_reg(0x63, (color & 0xf800) >> 11)
-        self.write_reg(0x64, (color & 0x07e0) >> 5)
-        self.write_reg(0x65, (color & 0x001f))
+        self._write_reg(0x63, (color & 0xF800) >> 11)
+        self._write_reg(0x64, (color & 0x07E0) >> 5)
+        self._write_reg(0x65, (color & 0x001F))
 
-    #pylint: disable-msg=invalid-name
+    # pylint: disable-msg=invalid-name
     def pixel(self, x, y, color):
         """
         Draw a pixel at the X and Y coordinates of the specified color
@@ -507,21 +544,21 @@ class RA8875Display(RA8875_Device):
         :param int y: The Y coordinate to set the cursor
         :param int color: The color of the pixel
         """
-        self.setxy(x, y)
-        self.write_reg(reg.MRWC, struct.pack(">H", color), True)
-    #pylint: enable-msg=invalid-name
+        self.setxy(x, y + self.vert_offset)
+        self._write_reg(reg.MRWC, struct.pack(">H", color), True)
+
+    # pylint: enable-msg=invalid-name
 
     def push_pixels(self, pixel_data):
         """
-        Push a stream of pixel data to the screen. Additional
-        data can be pushed with write_data for lower overhead.
+        Push a stream of pixel data to the screen.
 
         :param bytearray pixel_data: Raw pixel data to push
         """
         self._gfx_mode()
-        self.write_reg(reg.MRWC, pixel_data, True)
+        self._write_reg(reg.MRWC, pixel_data, True)
 
-    #pylint: disable-msg=invalid-name,too-many-arguments
+    # pylint: disable-msg=invalid-name,too-many-arguments
     def set_window(self, x, y, width, height):
         """
         Set an Active Drawing Window, which can be used in
@@ -537,16 +574,14 @@ class RA8875Display(RA8875_Device):
         if y + height >= self.height:
             height = self.height - y
         # X
-        self.write_reg(reg.HSAW0, x & 0xFF)
-        self.write_reg(reg.HSAW0 + 1, x >> 8)
-        self.write_reg(reg.HEAW0, (x + width) & 0xFF)
-        self.write_reg(reg.HEAW0 + 1, (x + width) >> 8)
+        self._write_reg16(reg.HSAW0, x)
+        self._write_reg16(reg.HEAW0, x + width)
         # Y
-        self.write_reg(reg.VSAW0, y & 0xFF)
-        self.write_reg(reg.VSAW0 + 1, y >> 8)
-        self.write_reg(reg.VEAW0, (y + height) & 0xFF)
-        self.write_reg(reg.VEAW0 + 1, (y + height) >> 8)
-    #pylint: enable-msg=invalid-name,too-many-arguments
+        self._write_reg16(reg.VSAW0, y)
+        self._write_reg16(reg.VEAW0, y + height)
+
+    # pylint: enable-msg=invalid-name,too-many-arguments
+
 
 class RA8875(RA8875Display):
     """
@@ -554,7 +589,8 @@ class RA8875(RA8875Display):
     Functions. For full display functionality, use this class. Valid display sizes are
     currently 800x480 and 480x272.
     """
-    #pylint: disable-msg=invalid-name,too-many-arguments
+
+    # pylint: disable-msg=invalid-name,too-many-arguments
     def rect(self, x, y, width, height, color):
         """
         Draw a rectangle (HW Accelerated)
@@ -565,7 +601,7 @@ class RA8875(RA8875Display):
         :param int height: The height of the rectangle
         :param int color: The color of the rectangle
         """
-        self._rect_helper(x, y, width, height, color, False)
+        self._rect_helper(x, y, x + width - 1, y + height - 1, color, False)
 
     def fill_rect(self, x, y, width, height, color):
         """
@@ -577,7 +613,7 @@ class RA8875(RA8875Display):
         :param int height: The height of the rectangle
         :param int color: The color of the rectangle
         """
-        self._rect_helper(x, y, width, height, color, True)
+        self._rect_helper(x, y, x + width - 1, y + height - 1, color, True)
 
     def fill(self, color):
         """
@@ -585,7 +621,7 @@ class RA8875(RA8875Display):
 
         :param int color: The color to Fill the screen
         """
-        self._rect_helper(0, 0, self.width, self.height, color, True)
+        self._rect_helper(0, 0, self.width - 1, self.height - 1, color, True)
 
     def circle(self, x_center, y_center, radius, color):
         """
@@ -698,7 +734,7 @@ class RA8875(RA8875Display):
         :param int width: The width of the line
         :param int color: The color of the line
         """
-        self.line(x, y, x + width, y, color)
+        self.line(x, y, x + width - 1, y, color)
 
     def vline(self, x, y, height, color):
         """
@@ -709,7 +745,7 @@ class RA8875(RA8875Display):
         :param int height: The height of the line
         :param int color: The color of the line
         """
-        self.line(x, y, x, y + height, color)
+        self.line(x, y, x, y + height - 1, color)
 
     def line(self, x1, y1, x2, y2, color):
         """
@@ -724,22 +760,18 @@ class RA8875(RA8875Display):
         self._gfx_mode()
 
         # Set Start Point
-        self.write_reg(0x91, x1)
-        self.write_reg(0x92, x1 >> 8)
-        self.write_reg(0x93, y1)
-        self.write_reg(0x94, y1 >> 8)
+        self._write_reg16(0x91, x1)
+        self._write_reg16(0x93, y1 + self.vert_offset)
 
         # Set End Point
-        self.write_reg(0x95, x2)
-        self.write_reg(0x96, x2 >> 8)
-        self.write_reg(0x97, y2)
-        self.write_reg(0x98, y2 >> 8)
+        self._write_reg16(0x95, x2)
+        self._write_reg16(0x97, y2 + self.vert_offset)
 
         self.set_color(color)
 
         # Draw it
-        self.write_reg(reg.DCR, 0x80)
-        self.wait_poll(reg.DCR, reg.DCR_LNSQTR_STATUS)
+        self._write_reg(reg.DCR, 0x80)
+        self._wait_poll(reg.DCR, reg.DCR_LNSQTR_STATUS)
 
     def round_rect(self, x, y, width, height, radius, color):
         """
@@ -754,13 +786,19 @@ class RA8875(RA8875Display):
         """
         self._gfx_mode()
         self._curve_helper(x + radius, y + radius, radius, radius, 1, color, False)
-        self._curve_helper(x + width - radius, y + radius, radius, radius, 2, color, False)
-        self._curve_helper(x + radius, y + height - radius, radius, radius, 0, color, False)
-        self._curve_helper(x + width - radius, y + height - radius, radius, radius, 3, color, False)
-        self.hline(x + radius, y, width - (radius * 2), color)
-        self.hline(x + radius, y + height, width - (radius * 2), color)
+        self._curve_helper(
+            x + width - radius - 1, y + radius, radius, radius, 2, color, False
+        )
+        self._curve_helper(
+            x + radius, y + height - radius, radius, radius, 0, color, False
+        )
+        self._curve_helper(
+            x + width - radius - 1, y + height - radius, radius, radius, 3, color, False
+        )
+        self.hline(x + radius, y, width - (radius * 2) - 1, color)
+        self.hline(x + radius, y + height, width - (radius * 2) - 1, color)
         self.vline(x, y + radius, height - (radius * 2), color)
-        self.vline(x + width, y + radius, height - (radius * 2), color)
+        self.vline(x + width - 1, y + radius, height - (radius * 2), color)
 
     def fill_round_rect(self, x, y, width, height, radius, color):
         """
@@ -775,116 +813,111 @@ class RA8875(RA8875Display):
         """
         self._gfx_mode()
         self._curve_helper(x + radius, y + radius, radius, radius, 1, color, True)
-        self._curve_helper(x + width - radius, y + radius, radius, radius, 2, color, True)
-        self._curve_helper(x + radius, y + height - radius, radius, radius, 0, color, True)
-        self._curve_helper(x + width - radius, y + height - radius, radius, radius, 3, color, True)
-        self._rect_helper(x + radius, y, x + width - radius, y + height, color, True)
-        self._rect_helper(x, y + radius, x + width, y + height - radius, color, True)
+        self._curve_helper(
+            x + width - radius - 1, y + radius, radius, radius, 2, color, True
+        )
+        self._curve_helper(
+            x + radius, y + height - radius, radius, radius, 0, color, True
+        )
+        self._curve_helper(
+            x + width - radius - 1, y + height - radius, radius, radius, 3, color, True
+        )
+        self._rect_helper(
+            x + radius, y, x + width - radius - 1, y + height - 1, color, True
+        )
+        self._rect_helper(
+            x, y + radius, x + width - 1, y + height - radius - 1, color, True
+        )
 
     def _circle_helper(self, x, y, radius, color, filled):
         """General Circle Drawing Helper"""
         self._gfx_mode()
 
         # Set X, Y, and Radius
-        self.write_reg(0x99, x)
-        self.write_reg(0x9A, x >> 8)
-        self.write_reg(0x9B, y)
-        self.write_reg(0x9C, y >> 8)
-        self.write_reg(0x9D, radius)
+        self._write_reg16(0x99, x)
+        self._write_reg16(0x9B, y + self.vert_offset)
+        self._write_reg(0x9D, radius)
 
         self.set_color(color)
 
         # Draw it
-        self.write_reg(reg.DCR, reg.DCR_CIRC_START | (reg.DCR_FILL if filled else reg.DCR_NOFILL))
-        self.wait_poll(reg.DCR, reg.DCR_CIRC_STATUS)
+        self._write_reg(
+            reg.DCR, reg.DCR_CIRC_START | (reg.DCR_FILL if filled else reg.DCR_NOFILL)
+        )
+        self._wait_poll(reg.DCR, reg.DCR_CIRC_STATUS)
 
-    def _rect_helper(self, x, y, width, height, color, filled):
+    def _rect_helper(self, x1, y1, x2, y2, color, filled):
         """General Rectangle Drawing Helper"""
         self._gfx_mode()
 
         # Set X and Y
-        self.write_reg(0x91, x)
-        self.write_reg(0x92, x >> 8)
-        self.write_reg(0x93, y)
-        self.write_reg(0x94, y >> 8)
+        self._write_reg16(0x91, x1)
+        self._write_reg16(0x93, y1 + self.vert_offset)
 
         # Set Width and Height
-        self.write_reg(0x95, width)
-        self.write_reg(0x96, width >> 8)
-        self.write_reg(0x97, height)
-        self.write_reg(0x98, height >> 8)
+        self._write_reg16(0x95, x2)
+        self._write_reg16(0x97, y2 + self.vert_offset)
 
         self.set_color(color)
 
         # Draw it
-        self.write_reg(reg.DCR, 0xB0 if filled else 0x90)
-        self.wait_poll(reg.DCR, reg.DCR_LNSQTR_STATUS)
+        self._write_reg(reg.DCR, 0xB0 if filled else 0x90)
+        self._wait_poll(reg.DCR, reg.DCR_LNSQTR_STATUS)
 
     def _triangle_helper(self, x1, y1, x2, y2, x3, y3, color, filled):
         """General Triangle Drawing Helper"""
         self._gfx_mode()
 
         # Set Point Coordinates
-        self.write_reg(0x91, x1)
-        self.write_reg(0x92, x1 >> 8)
-        self.write_reg(0x93, y1)
-        self.write_reg(0x94, y1 >> 8)
-        self.write_reg(0x95, x2)
-        self.write_reg(0x96, x2 >> 8)
-        self.write_reg(0x97, y2)
-        self.write_reg(0x98, y2 >> 8)
-        self.write_reg(0xA9, x3)
-        self.write_reg(0xAA, x3 >> 8)
-        self.write_reg(0xAB, y3)
-        self.write_reg(0xAC, y3 >> 8)
+        self._write_reg16(0x91, x1)
+        self._write_reg16(0x93, y1 + self.vert_offset)
+        self._write_reg16(0x95, x2)
+        self._write_reg16(0x97, y2 + self.vert_offset)
+        self._write_reg16(0xA9, x3)
+        self._write_reg16(0xAB, y3 + self.vert_offset)
 
         self.set_color(color)
 
         # Draw it
-        self.write_reg(reg.DCR, 0xA1 if filled else 0x81)
-        self.wait_poll(reg.DCR, reg.DCR_LNSQTR_STATUS)
+        self._write_reg(reg.DCR, 0xA1 if filled else 0x81)
+        self._wait_poll(reg.DCR, reg.DCR_LNSQTR_STATUS)
 
-    def _curve_helper(self, x_center, y_center, h_axis, v_axis, curve_part, color, filled):
+    def _curve_helper(
+        self, x_center, y_center, h_axis, v_axis, curve_part, color, filled
+    ):
         """General Curve Drawing Helper"""
         self._gfx_mode()
 
         # Set X and Y Center
-        self.write_reg(0xA5, x_center)
-        self.write_reg(0xA6, x_center >> 8)
-        self.write_reg(0xA7, y_center)
-        self.write_reg(0xA8, y_center >> 8)
+        self._write_reg16(0xA5, x_center)
+        self._write_reg16(0xA7, y_center + self.vert_offset)
 
         # Set Long and Short Axis
-        self.write_reg(0xA1, h_axis)
-        self.write_reg(0xA2, h_axis >> 8)
-        self.write_reg(0xA3, v_axis)
-        self.write_reg(0xA4, v_axis >> 8)
+        self._write_reg16(0xA1, h_axis)
+        self._write_reg16(0xA3, v_axis)
 
         self.set_color(color)
 
         # Draw it
-        self.write_reg(reg.ELLIPSE, (0xD0 if filled else 0x90) | (curve_part & 0x03))
-        self.wait_poll(reg.ELLIPSE, reg.ELLIPSE_STATUS)
+        self._write_reg(reg.ELLIPSE, (0xD0 if filled else 0x90) | (curve_part & 0x03))
+        self._wait_poll(reg.ELLIPSE, reg.ELLIPSE_STATUS)
 
     def _ellipse_helper(self, x_center, y_center, h_axis, v_axis, color, filled):
         """General Ellipse Drawing Helper"""
         self._gfx_mode()
 
         # Set X and Y  Center
-        self.write_reg(0xA5, x_center)
-        self.write_reg(0xA6, x_center >> 8)
-        self.write_reg(0xA7, y_center)
-        self.write_reg(0xA8, y_center >> 8)
+        self._write_reg16(0xA5, x_center)
+        self._write_reg16(0xA7, y_center + self.vert_offset)
 
         # Set Long and Short Axis
-        self.write_reg(0xA1, h_axis)
-        self.write_reg(0xA2, h_axis >> 8)
-        self.write_reg(0xA3, v_axis)
-        self.write_reg(0xA4, v_axis >> 8)
+        self._write_reg16(0xA1, h_axis)
+        self._write_reg16(0xA3, v_axis)
 
         self.set_color(color)
 
         # Draw it
-        self.write_reg(reg.ELLIPSE, 0xC0 if filled else 0x80)
-        self.wait_poll(reg.ELLIPSE, reg.ELLIPSE_STATUS)
-    #pylint: enable-msg=invalid-name,too-many-arguments
+        self._write_reg(reg.ELLIPSE, 0xC0 if filled else 0x80)
+        self._wait_poll(reg.ELLIPSE, reg.ELLIPSE_STATUS)
+
+    # pylint: enable-msg=invalid-name,too-many-arguments

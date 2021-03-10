@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2021 ladyada for Adafruit Industries
+# SPDX-License-Identifier: MIT
+
 import adafruit_trellism4
 
 trellis = adafruit_trellism4.TrellisM4Express()
@@ -34,7 +37,7 @@ while True:
 
         if not led_on[x][y]:
             print("Turning on:", press)
-            pixel_index = ((x + (y * 8)) * 256 // 32)
+            pixel_index = (x + (y * 8)) * 256 // 32
             trellis.pixels[x, y] = wheel(pixel_index & 255)
             led_on[x][y] = True
 

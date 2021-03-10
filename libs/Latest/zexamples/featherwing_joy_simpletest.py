@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2021 ladyada for Adafruit Industries
+# SPDX-License-Identifier: MIT
+
 """This example zeros the joystick, and prints when the joystick moves
    or the buttons are pressed."""
 import time
@@ -23,4 +26,4 @@ while True:
         print("Button Y!")
     if wing.button_select:
         print("Button SELECT!")
-    time.sleep(.01)
+    time.sleep(0.01)

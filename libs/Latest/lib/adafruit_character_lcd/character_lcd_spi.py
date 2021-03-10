@@ -1,24 +1,7 @@
-# The MIT License (MIT)
+# SPDX-FileCopyrightText: 2018 Kattni Rembor for Adafruit Industries
 #
-# Copyright (c) 2018 Kattni Rembor for Adafruit Industries
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
+# SPDX-License-Identifier: MIT
+
 """
 `adafruit_character_lcd.character_lcd_spi`
 ====================================================
@@ -43,13 +26,14 @@ Implementation Notes
 
 """
 
+import adafruit_74hc595
 from adafruit_character_lcd.character_lcd import Character_LCD_Mono
 
-__version__ = "3.1.2"
+__version__ = "3.3.9"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_CharLCD.git"
 
 
-class Character_LCD_SPI(Character_LCD_Mono):
+class Character_LCD_SPI(Character_LCD_Mono):  # pylint: disable=too-few-public-methods
     """Character LCD connected to I2C/SPI backpack using its SPI connection.
     This is a subclass of Character_LCD and implements all of the same
     functions and functionality.
@@ -76,7 +60,7 @@ class Character_LCD_SPI(Character_LCD_Mono):
         inverted.
         """
         # pylint: enable=too-many-arguments
-        import adafruit_74hc595
+
         self._shift_register = adafruit_74hc595.ShiftRegister74HC595(spi, latch)
         reset = self._shift_register.get_pin(1)
         enable = self._shift_register.get_pin(2)
@@ -85,5 +69,15 @@ class Character_LCD_SPI(Character_LCD_Mono):
         db6 = self._shift_register.get_pin(4)
         db7 = self._shift_register.get_pin(3)
         backlight_pin = self._shift_register.get_pin(7)
-        super().__init__(reset, enable, db4, db5, db6, db7, columns, lines,
-                         backlight_pin=backlight_pin, backlight_inverted=backlight_inverted)
+        super().__init__(
+            reset,
+            enable,
+            db4,
+            db5,
+            db6,
+            db7,
+            columns,
+            lines,
+            backlight_pin=backlight_pin,
+            backlight_inverted=backlight_inverted,
+        )

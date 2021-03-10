@@ -1,24 +1,7 @@
-# The MIT License (MIT)
+# SPDX-FileCopyrightText: 2018 ladyada for Adafruit Industries
 #
-# Copyright (c) 2018 ladyada for Adafruit Industries
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
+# SPDX-License-Identifier: MIT
+
 """
 `adafruit_veml6075`
 ====================================================
@@ -41,7 +24,7 @@ Implementation Notes
 
 """
 
-__version__ = "1.0.2"
+__version__ = "1.1.6"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_VEML6075.git"
 
 # imports
@@ -50,24 +33,19 @@ import time
 from adafruit_bus_device.i2c_device import I2CDevice
 from micropython import const
 
-# pylint: disable=bad-whitespace
 _VEML6075_ADDR = const(0x10)
 
-_REG_CONF    = const(0x00)
-_REG_UVA     = const(0x07)
-_REG_DARK    = const(0x08)  # check is true?
-_REG_UVB     = const(0x09)
+_REG_CONF = const(0x00)
+_REG_UVA = const(0x07)
+_REG_DARK = const(0x08)  # check is true?
+_REG_UVB = const(0x09)
 _REG_UVCOMP1 = const(0x0A)
 _REG_UVCOMP2 = const(0x0B)
-_REV_ID      = const(0x0C)
+_REV_ID = const(0x0C)
 
 # Valid constants for UV Integration Time
-_VEML6075_UV_IT = { 50:  0x00,
-                    100: 0x01,
-                    200: 0x02,
-                    400: 0x03,
-                    800: 0x04 }
-# pylint: enable=bad-whitespace
+_VEML6075_UV_IT = {50: 0x00, 100: 0x01, 200: 0x02, 400: 0x03, 800: 0x04}
+
 
 class VEML6075:
     """
@@ -89,10 +67,19 @@ class VEML6075:
     :param float uvb_response: the UVA responsivity
     """
 
-    def __init__(self, i2c_bus, *, integration_time=50, high_dynamic=True,
-                 uva_a_coef=2.22, uva_b_coef=1.33,
-                 uvb_c_coef=2.95, uvb_d_coef=1.74,
-                 uva_response=0.001461, uvb_response=0.002591):
+    def __init__(
+        self,
+        i2c_bus,
+        *,
+        integration_time=50,
+        high_dynamic=True,
+        uva_a_coef=2.22,
+        uva_b_coef=1.33,
+        uvb_c_coef=2.95,
+        uvb_d_coef=1.74,
+        uva_response=0.001461,
+        uvb_response=0.002591
+    ):
         # Set coefficients
         self._a = uva_a_coef
         self._b = uva_b_coef
@@ -129,13 +116,13 @@ class VEML6075:
         time.sleep(0.1)
         uva = self._read_register(_REG_UVA)
         uvb = self._read_register(_REG_UVB)
-        #dark = self._read_register(_REG_DARK)
+        # dark = self._read_register(_REG_DARK)
         uvcomp1 = self._read_register(_REG_UVCOMP1)
         uvcomp2 = self._read_register(_REG_UVCOMP2)
         # Equasion 1 & 2 in App note, without 'golden sample' calibration
         self._uvacalc = uva - (self._a * uvcomp1) - (self._b * uvcomp2)
         self._uvbcalc = uvb - (self._c * uvcomp1) - (self._d * uvcomp2)
-        #print("UVA = %d, UVB = %d, UVcomp1 = %d, UVcomp2 = %d, Dark = %d" %
+        # print("UVA = %d, UVB = %d, UVcomp1 = %d, UVcomp2 = %d, Dark = %d" %
         #      (uva, uvb, uvcomp1, uvcomp2, dark))
 
     @property
@@ -171,17 +158,15 @@ class VEML6075:
         if not val in _VEML6075_UV_IT.keys():
             raise RuntimeError("Invalid integration time")
         conf = self._read_register(_REG_CONF)
-        conf &= ~ 0b01110000 # mask off bits 4:6
+        conf &= ~0b01110000  # mask off bits 4:6
         conf |= _VEML6075_UV_IT[val] << 4
         self._write_register(_REG_CONF, conf)
-
 
     def _read_register(self, register):
         """Read a 16-bit value from the `register` location"""
         self._buffer[0] = register
         with self._i2c as i2c:
-            i2c.write_then_readinto(self._buffer, self._buffer,
-                                    out_end=1, in_end=2, stop=False)
+            i2c.write_then_readinto(self._buffer, self._buffer, out_end=1, in_end=2)
         return (self._buffer[1] << 8) | self._buffer[0]
 
     def _write_register(self, register, value):

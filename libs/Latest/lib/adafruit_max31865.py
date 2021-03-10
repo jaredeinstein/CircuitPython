@@ -1,24 +1,7 @@
-# The MIT License (MIT)
+# SPDX-FileCopyrightText: 2017 Tony DiCola for Adafruit Industries
 #
-# Copyright (c) 2017 Tony DiCola for Adafruit Industries
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
+# SPDX-License-Identifier: MIT
+
 """
 `adafruit_max31865`
 ====================================================
@@ -55,35 +38,35 @@ from micropython import const
 
 import adafruit_bus_device.spi_device as spi_device
 
+__version__ = "2.2.8"
+__repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_MAX31865.git"
 
-#pylint: disable=bad-whitespace
 # Register and other constant values:
-_MAX31865_CONFIG_REG          = const(0x00)
-_MAX31865_CONFIG_BIAS         = const(0x80)
-_MAX31865_CONFIG_MODEAUTO     = const(0x40)
-_MAX31865_CONFIG_MODEOFF      = const(0x00)
-_MAX31865_CONFIG_1SHOT        = const(0x20)
-_MAX31865_CONFIG_3WIRE        = const(0x10)
-_MAX31865_CONFIG_24WIRE       = const(0x00)
-_MAX31865_CONFIG_FAULTSTAT    = const(0x02)
-_MAX31865_CONFIG_FILT50HZ     = const(0x01)
-_MAX31865_CONFIG_FILT60HZ     = const(0x00)
-_MAX31865_RTDMSB_REG          = const(0x01)
-_MAX31865_RTDLSB_REG          = const(0x02)
-_MAX31865_HFAULTMSB_REG       = const(0x03)
-_MAX31865_HFAULTLSB_REG       = const(0x04)
-_MAX31865_LFAULTMSB_REG       = const(0x05)
-_MAX31865_LFAULTLSB_REG       = const(0x06)
-_MAX31865_FAULTSTAT_REG       = const(0x07)
-_MAX31865_FAULT_HIGHTHRESH    = const(0x80)
-_MAX31865_FAULT_LOWTHRESH     = const(0x40)
-_MAX31865_FAULT_REFINLOW      = const(0x20)
-_MAX31865_FAULT_REFINHIGH     = const(0x10)
-_MAX31865_FAULT_RTDINLOW      = const(0x08)
-_MAX31865_FAULT_OVUV          = const(0x04)
+_MAX31865_CONFIG_REG = const(0x00)
+_MAX31865_CONFIG_BIAS = const(0x80)
+_MAX31865_CONFIG_MODEAUTO = const(0x40)
+_MAX31865_CONFIG_MODEOFF = const(0x00)
+_MAX31865_CONFIG_1SHOT = const(0x20)
+_MAX31865_CONFIG_3WIRE = const(0x10)
+_MAX31865_CONFIG_24WIRE = const(0x00)
+_MAX31865_CONFIG_FAULTSTAT = const(0x02)
+_MAX31865_CONFIG_FILT50HZ = const(0x01)
+_MAX31865_CONFIG_FILT60HZ = const(0x00)
+_MAX31865_RTDMSB_REG = const(0x01)
+_MAX31865_RTDLSB_REG = const(0x02)
+_MAX31865_HFAULTMSB_REG = const(0x03)
+_MAX31865_HFAULTLSB_REG = const(0x04)
+_MAX31865_LFAULTMSB_REG = const(0x05)
+_MAX31865_LFAULTLSB_REG = const(0x06)
+_MAX31865_FAULTSTAT_REG = const(0x07)
+_MAX31865_FAULT_HIGHTHRESH = const(0x80)
+_MAX31865_FAULT_LOWTHRESH = const(0x40)
+_MAX31865_FAULT_REFINLOW = const(0x20)
+_MAX31865_FAULT_REFINHIGH = const(0x10)
+_MAX31865_FAULT_RTDINLOW = const(0x08)
+_MAX31865_FAULT_OVUV = const(0x04)
 _RTD_A = 3.9083e-3
 _RTD_B = -5.775e-7
-#pylint: enable=bad-whitespace
 
 
 class MAX31865:
@@ -94,15 +77,33 @@ class MAX31865:
     # thread safe!
     _BUFFER = bytearray(3)
 
-    def __init__(self, spi, cs, *, rtd_nominal=100, ref_resistor=430.0, wires=2):
+    def __init__(
+        self,
+        spi,
+        cs,
+        *,
+        rtd_nominal=100,
+        ref_resistor=430.0,
+        wires=2,
+        filter_frequency=60
+    ):
         self.rtd_nominal = rtd_nominal
         self.ref_resistor = ref_resistor
-        self._device = spi_device.SPIDevice(spi, cs, baudrate=500000,
-                                            polarity=0, phase=1)
+        self._device = spi_device.SPIDevice(
+            spi, cs, baudrate=500000, polarity=0, phase=1
+        )
+        # Set 50Hz or 60Hz filter.
+        if filter_frequency not in (50, 60):
+            raise ValueError("Filter_frequency must be a value of 50 or 60!")
+        config = self._read_u8(_MAX31865_CONFIG_REG)
+        if filter_frequency == 50:
+            config |= _MAX31865_CONFIG_FILT50HZ
+        else:
+            config &= ~_MAX31865_CONFIG_FILT50HZ
+
         # Set wire config register based on the number of wires specified.
         if wires not in (2, 3, 4):
-            raise ValueError('Wires must be a value of 2, 3, or 4!')
-        config = self._read_u8(_MAX31865_CONFIG_REG)
+            raise ValueError("Wires must be a value of 2, 3, or 4!")
         if wires == 3:
             config |= _MAX31865_CONFIG_3WIRE
         else:
@@ -136,6 +137,7 @@ class MAX31865:
             self._BUFFER[0] = (address | 0x80) & 0xFF
             self._BUFFER[1] = val & 0xFF
             device.write(self._BUFFER, end=2)
+
     # pylint: enable=no-member
 
     @property
@@ -163,7 +165,7 @@ class MAX31865:
     def auto_convert(self, val):
         config = self._read_u8(_MAX31865_CONFIG_REG)
         if val:
-            config |= _MAX31865_CONFIG_MODEAUTO   # Enable auto convert.
+            config |= _MAX31865_CONFIG_MODEAUTO  # Enable auto convert.
         else:
             config &= ~_MAX31865_CONFIG_MODEAUTO  # Disable auto convert.
         self._write_u8(_MAX31865_CONFIG_REG, config)
@@ -182,14 +184,12 @@ class MAX31865:
         - OVUV
         """
         faults = self._read_u8(_MAX31865_FAULTSTAT_REG)
-        #pylint: disable=bad-whitespace
         highthresh = bool(faults & _MAX31865_FAULT_HIGHTHRESH)
-        lowthresh  = bool(faults & _MAX31865_FAULT_LOWTHRESH)
-        refinlow   = bool(faults & _MAX31865_FAULT_REFINLOW)
-        refinhigh  = bool(faults & _MAX31865_FAULT_REFINHIGH)
-        rtdinlow   = bool(faults & _MAX31865_FAULT_RTDINLOW)
-        ovuv       = bool(faults & _MAX31865_FAULT_OVUV)
-        #pylint: enable=bad-whitespace
+        lowthresh = bool(faults & _MAX31865_FAULT_LOWTHRESH)
+        refinlow = bool(faults & _MAX31865_FAULT_REFINLOW)
+        refinhigh = bool(faults & _MAX31865_FAULT_REFINHIGH)
+        rtdinlow = bool(faults & _MAX31865_FAULT_RTDINLOW)
+        ovuv = bool(faults & _MAX31865_FAULT_OVUV)
         return (highthresh, lowthresh, refinlow, refinhigh, rtdinlow, ovuv)
 
     def clear_faults(self):
@@ -213,6 +213,7 @@ class MAX31865:
         self._write_u8(_MAX31865_CONFIG_REG, config)
         time.sleep(0.065)
         rtd = self._read_u16(_MAX31865_RTDMSB_REG)
+        self.bias = False
         # Remove fault bit.
         rtd >>= 1
         return rtd
@@ -244,6 +245,11 @@ class MAX31865:
         temp = (math.sqrt(temp) + Z1) / Z4
         if temp >= 0:
             return temp
+
+        # For the following math to work, nominal RTD resistance must be normalized to 100 ohms
+        raw_reading /= self.rtd_nominal
+        raw_reading *= 100
+
         rpoly = raw_reading
         temp = -242.02
         temp += 2.2228 * rpoly

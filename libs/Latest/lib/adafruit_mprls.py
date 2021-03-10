@@ -1,24 +1,7 @@
-# The MIT License (MIT)
+# SPDX-FileCopyrightText: 2018 ladyada for Adafruit Industries
 #
-# Copyright (c) 2018 ladyada for Adafruit Industries
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
+# SPDX-License-Identifier: MIT
+
 """
 `adafruit_mprls`
 ====================================================
@@ -43,7 +26,7 @@ Implementation Notes
 
 # imports
 
-__version__ = "1.0.3"
+__version__ = "1.2.6"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_MPRLS.git"
 
 
@@ -52,9 +35,8 @@ from adafruit_bus_device.i2c_device import I2CDevice
 from digitalio import Direction
 from micropython import const
 
-# pylint: disable=bad-whitespace
 _MPRLS_DEFAULT_ADDR = const(0x18)
-# pylint: enable=bad-whitespace
+
 
 class MPRLS:
     """
@@ -67,8 +49,16 @@ class MPRLS:
     :param float psi_max: The maximum pressure in PSI, defaults to 25
     """
 
-    def __init__(self, i2c_bus, *, addr=_MPRLS_DEFAULT_ADDR,
-                 reset_pin=None, eoc_pin=None, psi_min=0, psi_max=25):
+    def __init__(
+        self,
+        i2c_bus,
+        *,
+        addr=_MPRLS_DEFAULT_ADDR,
+        reset_pin=None,
+        eoc_pin=None,
+        psi_min=0,
+        psi_max=25
+    ):
         # Init I2C
         self._i2c = I2CDevice(i2c_bus, addr)
         self._buffer = bytearray(4)
@@ -80,7 +70,7 @@ class MPRLS:
             reset_pin.value = False
             time.sleep(0.01)
             reset_pin.value = True
-        time.sleep(0.005) # Start up timing
+        time.sleep(0.005)  # Start up timing
 
         # Optional end-of-conversion pin
         self._eoc = eoc_pin
@@ -97,7 +87,6 @@ class MPRLS:
     def pressure(self):
         """The measured pressure, in hPa"""
         return self._read_data()
-
 
     def _read_data(self):
         """Read the status & 24-bit data reading"""
@@ -129,7 +118,7 @@ class MPRLS:
         # All is good, calculate the PSI and convert to hPA
         raw_psi = (self._buffer[1] << 16) | (self._buffer[2] << 8) | self._buffer[3]
         # use the 10-90 calibration curve
-        psi = (raw_psi - 0x19999A) * (self._psimax-self._psimin)
+        psi = (raw_psi - 0x19999A) * (self._psimax - self._psimin)
         psi /= 0xE66666 - 0x19999A
         psi += self._psimin
         # convert PSI to hPA

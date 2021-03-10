@@ -1,24 +1,7 @@
-# The MIT License (MIT)
+# SPDX-FileCopyrightText: 2017 Tony DiCola for Adafruit Industries
 #
-# Copyright (c) 2017 Tony DiCola for Adafruit Industries
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
+# SPDX-License-Identifier: MIT
+
 """
 `adafruit_mcp4725` - MCP4725 digital to analog converter
 ========================================================
@@ -26,7 +9,7 @@
 CircuitPython module for the MCP4725 digital to analog converter.  See
 examples/mcp4725_simpletest.py for a demo of the usage.
 
-* Author(s): Tony DiCola
+* Author(s): Tony DiCola, Carter Nelson
 
 Implementation Notes
 --------------------
@@ -41,15 +24,18 @@ Implementation Notes
 * Adafruit CircuitPython firmware for the ESP8622 and M0-based boards:
   https://github.com/adafruit/circuitpython/releases
 """
+import time
 from micropython import const
+from adafruit_bus_device import i2c_device
 
-__version__ = "1.1.2"
+__version__ = "1.4.3"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_MCP4725.git"
 
 
 # Internal constants:
 _MCP4725_DEFAULT_ADDRESS = 0b01100010
 _MCP4725_WRITE_FAST_MODE = const(0b00000000)
+_MCP4725_WRITE_DAC_EEPROM = const(0b01100000)
 
 
 class MCP4725:
@@ -62,7 +48,6 @@ class MCP4725:
     :param int address: The address of the device if set differently from the default.
     """
 
-
     # Global buffer to prevent allocations and heap fragmentation.
     # Note this is not thread-safe or re-entrant by design!
     _BUFFER = bytearray(3)
@@ -71,7 +56,7 @@ class MCP4725:
         # This device doesn't use registers and instead just accepts a single
         # command string over I2C.  As a result we don't use bus device or
         # other abstractions and just talk raw I2C protocol.
-        self._i2c = i2c
+        self._i2c = i2c_device.I2CDevice(i2c, address)
         self._address = address
 
     def _write_fast_mode(self, val):
@@ -79,35 +64,23 @@ class MCP4725:
         # Will not enter power down, update EEPROM, or any other state beyond
         # the 12-bit DAC value.
         assert 0 <= val <= 4095
-        try:
-            # Make sure bus is locked before write.
-            while not self._i2c.try_lock():
-                pass
-            # Build bytes to send to device with updated value.
-            val &= 0xFFF
-            self._BUFFER[0] = _MCP4725_WRITE_FAST_MODE | (val >> 8)
-            self._BUFFER[1] = val & 0xFF
-            self._i2c.writeto(self._address, self._BUFFER, end=2)
-        finally:
-            # Ensure bus is always unlocked.
-            self._i2c.unlock()
+        # Build bytes to send to device with updated value.
+        val &= 0xFFF
+        self._BUFFER[0] = _MCP4725_WRITE_FAST_MODE | (val >> 8)
+        self._BUFFER[1] = val & 0xFF
+        with self._i2c as i2c:
+            i2c.write(self._BUFFER, end=2)
 
     def _read(self):
         # Perform a read of the DAC value.  Returns the 12-bit value.
-        try:
-            # Make sure bus is locked before write.
-            while not self._i2c.try_lock():
-                pass
-            # Read 3 bytes from device.
-            self._i2c.readfrom_into(self._address, self._BUFFER)
-            # Grab the DAC value from last two bytes.
-            dac_high = self._BUFFER[1]
-            dac_low = self._BUFFER[2] >> 4
-            # Reconstruct 12-bit value and return it.
-            return ((dac_high << 4) | dac_low) & 0xFFF
-        finally:
-            # Ensure bus is always unlocked.
-            self._i2c.unlock()
+        # Read 3 bytes from device.
+        with self._i2c as i2c:
+            i2c.readinto(self._BUFFER)
+        # Grab the DAC value from last two bytes.
+        dac_high = self._BUFFER[1]
+        dac_low = self._BUFFER[2] >> 4
+        # Reconstruct 12-bit value and return it.
+        return ((dac_high << 4) | dac_low) & 0xFFF
 
     @property
     def value(self):
@@ -143,12 +116,27 @@ class MCP4725:
 
     @property
     def normalized_value(self):
-        """The DAC value as a floating point number in the range 0.0 to 1.0.
-        """
-        return self._read()/4095.0
+        """The DAC value as a floating point number in the range 0.0 to 1.0."""
+        return self._read() / 4095.0
 
     @normalized_value.setter
     def normalized_value(self, val):
         assert 0.0 <= val <= 1.0
         raw_value = int(val * 4095.0)
         self._write_fast_mode(raw_value)
+
+    def save_to_eeprom(self):
+        """Store the current DAC value in EEPROM."""
+        # get it and write it
+        current_value = self._read()
+        self._BUFFER[0] = _MCP4725_WRITE_DAC_EEPROM
+        self._BUFFER[1] = (current_value >> 4) & 0xFF
+        self._BUFFER[2] = (current_value << 4) & 0xFF
+        with self._i2c as i2c:
+            i2c.write(self._BUFFER)
+        # wait for EEPROM write to complete
+        self._BUFFER[0] = 0x00
+        while not self._BUFFER[0] & 0x80:
+            time.sleep(0.05)
+            with self._i2c as i2c:
+                i2c.readinto(self._BUFFER, end=1)

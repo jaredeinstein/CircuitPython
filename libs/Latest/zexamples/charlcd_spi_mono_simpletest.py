@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2021 ladyada for Adafruit Industries
+# SPDX-License-Identifier: MIT
+
 """Simple test for 16x2 character LCD connected to 74HC595 SPI LCD backpack."""
 import time
 import board
@@ -50,7 +53,7 @@ time.sleep(5)
 lcd.blink = False
 lcd.clear()
 # Create message to scroll
-scroll_msg = '<-- Scroll'
+scroll_msg = "<-- Scroll"
 lcd.message = scroll_msg
 # Scroll message to the left
 for i in range(len(scroll_msg)):

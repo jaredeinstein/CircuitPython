@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2021 ladyada for Adafruit Industries
+# SPDX-License-Identifier: MIT
+
 # This example shows how to access the DS2413 pins and use them for both input
 # and output. In this example, it is assumed an LED is attached to IOA and a
 # button is attached to IOB. See the datasheet for details about how to

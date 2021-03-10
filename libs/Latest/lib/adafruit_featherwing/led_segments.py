@@ -1,24 +1,7 @@
-# The MIT License (MIT)
+# SPDX-FileCopyrightText: 2019 Melissa LeBlanc-Williams for Adafruit Industries
 #
-# Copyright (c) 2019 Melissa LeBlanc-Williams for Adafruit Industries LLC
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
+# SPDX-License-Identifier: MIT
+
 """
 `adafruit_featherwing.led_segments`
 ====================================================
@@ -28,18 +11,18 @@ Base Class for the AlphaNumeric FeatherWing and 7-Segment FeatherWing helpers_.
 * Author(s): Melissa LeBlanc-Williams
 """
 
-__version__ = "1.7.3"
+__version__ = "1.13.4"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_FeatherWing.git"
 
-from time import sleep
+# pylint: disable-msg=unsubscriptable-object, unsupported-assignment-operation
 
-#pylint: disable-msg=unsubscriptable-object, unsupported-assignment-operation
 
 class Segments:
     """Class representing an `Adafruit 14-segment AlphaNumeric FeatherWing
-       <https://www.adafruit.com/product/3139>`_.
+    <https://www.adafruit.com/product/3139>`_.
 
-       Automatically uses the feather's I2C bus."""
+    Automatically uses the feather's I2C bus."""
+
     def __init__(self):
         self._segments = None
 
@@ -51,6 +34,10 @@ class Segments:
         :type value: str or int or float
 
         """
+        # Attempt to round off so we can still display the value
+        if isinstance(value, float) and len(str(value)) > 5:
+            value = round(value)
+
         self._segments.print(value)
         self._segments.show()
 
@@ -64,26 +51,7 @@ class Segments:
         :param bool loop: (optional) Whether to endlessly loop the text (default=True)
 
         """
-        if isinstance(text, str):
-            self.fill(False)
-            if loop:
-                while True:
-                    self._scroll_marquee(text, delay)
-            else:
-                self._scroll_marquee(text, delay)
-
-    def _scroll_marquee(self, text, delay):
-        """
-        Scroll through the text string once using the delay
-        """
-        char_is_dot = False
-        for character in text:
-            self._segments.print(character)
-            # Add delay if character is not a dot or more than 2 in a row
-            if character != '.' or char_is_dot:
-                sleep(delay)
-            char_is_dot = (character == '.')
-            self._segments.show()
+        self._segments.marquee(text, delay, loop)
 
     def fill(self, fill):
         """Change all Segments on or off
@@ -95,7 +63,7 @@ class Segments:
             self._segments.fill(1 if fill else 0)
             self._segments.show()
         else:
-            raise ValueError('Must set to either True or False.')
+            raise ValueError("Must set to either True or False.")
 
     @property
     def blink_rate(self):
@@ -116,8 +84,10 @@ class Segments:
         Brightness returns the current display brightness.
         0-15 = Dimmest to Brightest Setting
         """
-        return self._segments.brightness
+        return round(self._segments.brightness * 15)
 
     @brightness.setter
     def brightness(self, brightness):
-        self._segments.brightness = brightness
+        if not 0 <= brightness <= 15:
+            raise ValueError("Brightness must be a value between 0 and 15")
+        self._segments.brightness = brightness / 15

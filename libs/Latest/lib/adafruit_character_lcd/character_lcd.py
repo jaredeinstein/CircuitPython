@@ -1,25 +1,8 @@
-# The MIT License (MIT)
+# SPDX-FileCopyrightText: 2017 Brent Rubell for Adafruit Industries
+# SPDX-FileCopyrightText: 2018 Kattni Rembor for Adafruit Industries
 #
-# Copyright (c) 2017 Brent Rubell for Adafruit Industries
-# Copyright (c) 2018 Kattni Rembor for Adafruit Industries
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
+# SPDX-License-Identifier: MIT
+
 """
 `adafruit_character_lcd.character_lcd`
 ====================================================
@@ -49,46 +32,43 @@ import time
 import digitalio
 from micropython import const
 
-__version__ = "3.1.2"
+__version__ = "3.3.9"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_CharLCD.git"
 
-# pylint: disable-msg=bad-whitespace
 # Commands
-_LCD_CLEARDISPLAY        = const(0x01)
-_LCD_RETURNHOME          = const(0x02)
-_LCD_ENTRYMODESET        = const(0x04)
-_LCD_DISPLAYCONTROL      = const(0x08)
-_LCD_CURSORSHIFT         = const(0x10)
-_LCD_FUNCTIONSET         = const(0x20)
-_LCD_SETCGRAMADDR        = const(0x40)
-_LCD_SETDDRAMADDR        = const(0x80)
+_LCD_CLEARDISPLAY = const(0x01)
+_LCD_RETURNHOME = const(0x02)
+_LCD_ENTRYMODESET = const(0x04)
+_LCD_DISPLAYCONTROL = const(0x08)
+_LCD_CURSORSHIFT = const(0x10)
+_LCD_FUNCTIONSET = const(0x20)
+_LCD_SETCGRAMADDR = const(0x40)
+_LCD_SETDDRAMADDR = const(0x80)
 
 # Entry flags
-_LCD_ENTRYLEFT           = const(0x02)
+_LCD_ENTRYLEFT = const(0x02)
 _LCD_ENTRYSHIFTDECREMENT = const(0x00)
 
 # Control flags
-_LCD_DISPLAYON           = const(0x04)
-_LCD_CURSORON            = const(0x02)
-_LCD_CURSOROFF           = const(0x00)
-_LCD_BLINKON             = const(0x01)
-_LCD_BLINKOFF            = const(0x00)
+_LCD_DISPLAYON = const(0x04)
+_LCD_CURSORON = const(0x02)
+_LCD_CURSOROFF = const(0x00)
+_LCD_BLINKON = const(0x01)
+_LCD_BLINKOFF = const(0x00)
 
 # Move flags
-_LCD_DISPLAYMOVE         = const(0x08)
-_LCD_MOVERIGHT           = const(0x04)
-_LCD_MOVELEFT            = const(0x00)
+_LCD_DISPLAYMOVE = const(0x08)
+_LCD_MOVERIGHT = const(0x04)
+_LCD_MOVELEFT = const(0x00)
 
 # Function set flags
-_LCD_4BITMODE            = const(0x00)
-_LCD_2LINE               = const(0x08)
-_LCD_1LINE               = const(0x00)
-_LCD_5X8DOTS             = const(0x00)
+_LCD_4BITMODE = const(0x00)
+_LCD_2LINE = const(0x08)
+_LCD_1LINE = const(0x00)
+_LCD_5X8DOTS = const(0x00)
 
 # Offset for up to 4 rows.
-_LCD_ROW_OFFSETS         = (0x00, 0x40, 0x14, 0x54)
-
-# pylint: enable-msg=bad-whitespace
+_LCD_ROW_OFFSETS = (0x00, 0x40, 0x14, 0x54)
 
 
 def _set_bit(byte_value, position, val):
@@ -128,12 +108,12 @@ class Character_LCD:
     :param lines: The lines on the charLCD
 
     """
+
     LEFT_TO_RIGHT = const(0)
     RIGHT_TO_LEFT = const(1)
 
     # pylint: disable-msg=too-many-arguments
-    def __init__(self, rs, en, d4, d5, d6, d7, columns, lines
-                ):
+    def __init__(self, rs, en, d4, d5, d6, d7, columns, lines):
 
         self.columns = columns
         self.lines = lines
@@ -146,7 +126,7 @@ class Character_LCD:
         self.dl7 = d7
 
         # set all pins as outputs
-        for pin in(rs, en, d4, d5, d6, d7):
+        for pin in (rs, en, d4, d5, d6, d7):
             pin.direction = digitalio.Direction.OUTPUT
 
         # Initialise the display
@@ -169,10 +149,16 @@ class Character_LCD:
         self._message = None
         self._enable = None
         self._direction = None
+        # track row and column used in cursor_position
+        # initialize to 0,0
+        self.row = 0
+        self.column = 0
+        self._column_align = False
+
     # pylint: enable-msg=too-many-arguments
 
     def home(self):
-        """Moves the cursor "home" to position (1, 1)."""
+        """Moves the cursor "home" to position (0, 0)."""
         self._write8(_LCD_RETURNHOME)
         time.sleep(0.003)
 
@@ -197,6 +183,20 @@ class Character_LCD:
         """
         self._write8(_LCD_CLEARDISPLAY)
         time.sleep(0.003)
+
+    @property
+    def column_align(self):
+        """If True, message text after '\\n' starts directly below start of first
+        character in message. If False, text after '\\n' starts at column zero.
+        """
+        return self._column_align
+
+    @column_align.setter
+    def column_align(self, enable):
+        if isinstance(enable, bool):
+            self._column_align = enable
+        else:
+            raise ValueError("The column_align value must be either True or False")
 
     @property
     def cursor(self):
@@ -230,7 +230,8 @@ class Character_LCD:
         self._write8(_LCD_DISPLAYCONTROL | self.displaycontrol)
 
     def cursor_position(self, column, row):
-        """Move the cursor to position ``column``, ``row``
+        """Move the cursor to position ``column``, ``row`` for the next
+        message only. Displaying a message resets the cursor position to (0, 0).
 
             :param column: column location
             :param row: row location
@@ -243,6 +244,9 @@ class Character_LCD:
             column = self.columns - 1
         # Set location
         self._write8(_LCD_SETDDRAMADDR | (column + _LCD_ROW_OFFSETS[row]))
+        # Update self.row and self.column to match setter
+        self.row = row
+        self.column = column
 
     @property
     def blink(self):
@@ -310,6 +314,11 @@ class Character_LCD:
     @property
     def message(self):
         """Display a string of text on the character LCD.
+        Start position is (0,0) if cursor_position is not set.
+        If cursor_position is set, message starts at the set
+        position from the left for left to right text and from
+        the right for right to left text. Resets cursor column
+        and row to (0,0) after displaying the message.
 
         The following example displays, "Hello, world!" on the LCD.
 
@@ -331,28 +340,45 @@ class Character_LCD:
     @message.setter
     def message(self, message):
         self._message = message
-        line = 0
+        # Set line to match self.row from cursor_position()
+        line = self.row
         # Track times through iteration, to act on the initial character of the message
         initial_character = 0
         # iterate through each character
         for character in message:
             # If this is the first character in the string:
             if initial_character == 0:
-                # Start at (1, 1) unless direction is set right to left, in which case start
-                # on the opposite side of the display.
-                col = 0 if self.displaymode & _LCD_ENTRYLEFT > 0 else self.columns - 1
+                # Start at (0, 0) unless direction is set right to left, in which case start
+                # on the opposite side of the display if cursor_position not set or (0,0)
+                # If cursor_position is set then starts at the specified location for
+                # LEFT_TO_RIGHT. If RIGHT_TO_LEFT cursor_position is determined from right.
+                # allows for cursor_position to work in RIGHT_TO_LEFT mode
+                if self.displaymode & _LCD_ENTRYLEFT > 0:
+                    col = self.column
+                else:
+                    col = self.columns - 1 - self.column
                 self.cursor_position(col, line)
                 initial_character += 1
             # If character is \n, go to next line
-            if character == '\n':
+            if character == "\n":
                 line += 1
-                # Start the second line at (1, 1) unless direction is set right to left in which
-                # case start on the opposite side of the display.
-                col = 0 if self.displaymode & _LCD_ENTRYLEFT > 0 else self.columns - 1
+                # Start the second line at (0, 1) unless direction is set right to left in
+                # which case start on the opposite side of the display if cursor_position
+                # is (0,0) or not set. Start second line at same column as first line when
+                # cursor_position is set
+                if self.displaymode & _LCD_ENTRYLEFT > 0:
+                    col = self.column * self._column_align
+                else:
+                    if self._column_align:
+                        col = self.column
+                    else:
+                        col = self.columns - 1
                 self.cursor_position(col, line)
             # Write string to display
             else:
                 self._write8(ord(character), True)
+        # reset column and row to (0,0) after message is displayed
+        self.column, self.row = 0, 0
 
     def move_left(self):
         """Moves displayed text left one column.
@@ -495,6 +521,8 @@ class Character_LCD:
         time.sleep(0.0000001)
         self.enable.value = False
         time.sleep(0.0000001)
+
+
 # pylint: enable-msg=too-many-instance-attributes
 
 
@@ -502,23 +530,35 @@ class Character_LCD:
 class Character_LCD_Mono(Character_LCD):
     """Interfaces with monochromatic character LCDs.
 
-        :param ~digitalio.DigitalInOut rs: The reset data line
-        :param ~digitalio.DigitalInOut en: The enable data line
-        :param ~digitalio.DigitalInOut d4: The data line 4
-        :param ~digitalio.DigitalInOut d5: The data line 5
-        :param ~digitalio.DigitalInOut d6: The data line 6
-        :param ~digitalio.DigitalInOut d7: The data line 7
-        :param columns: The columns on the charLCD
-        :param lines: The lines on the charLCD
-        :param ~digitalio.DigitalInOut backlight_pin: The backlight pin
-        :param bool backlight_inverted: ``False`` if LCD is not inverted, i.e. backlight pin is
-            connected to common anode. ``True`` if LCD is inverted i.e. backlight pin is connected
-            to common cathode.
+    :param ~digitalio.DigitalInOut rs: The reset data line
+    :param ~digitalio.DigitalInOut en: The enable data line
+    :param ~digitalio.DigitalInOut d4: The data line 4
+    :param ~digitalio.DigitalInOut d5: The data line 5
+    :param ~digitalio.DigitalInOut d6: The data line 6
+    :param ~digitalio.DigitalInOut d7: The data line 7
+    :param columns: The columns on the charLCD
+    :param lines: The lines on the charLCD
+    :param ~digitalio.DigitalInOut backlight_pin: The backlight pin
+    :param bool backlight_inverted: ``False`` if LCD is not inverted, i.e. backlight pin is
+        connected to common anode. ``True`` if LCD is inverted i.e. backlight pin is connected
+        to common cathode.
 
     """
+
     # pylint: disable-msg=too-many-arguments
-    def __init__(self, rs, en, db4, db5, db6, db7, columns, lines,
-                 backlight_pin=None, backlight_inverted=False):
+    def __init__(
+        self,
+        rs,
+        en,
+        db4,
+        db5,
+        db6,
+        db7,
+        columns,
+        lines,
+        backlight_pin=None,
+        backlight_inverted=False,
+    ):
 
         # Backlight pin and inversion
         self.backlight_pin = backlight_pin
@@ -529,6 +569,7 @@ class Character_LCD_Mono(Character_LCD):
             self.backlight_pin.direction = digitalio.Direction.OUTPUT
             self.backlight = True
         super().__init__(rs, en, db4, db5, db6, db7, columns, lines)
+
     # pylint: enable-msg=too-many-arguments
 
     @property
@@ -571,24 +612,38 @@ class Character_LCD_Mono(Character_LCD):
 class Character_LCD_RGB(Character_LCD):
     """Interfaces with RGB character LCDs.
 
-        :param ~digitalio.DigitalInOut rs: The reset data line
-        :param ~digitalio.DigitalInOut en: The enable data line
-        :param ~digitalio.DigitalInOut db4: The data line 4
-        :param ~digitalio.DigitalInOut db5: The data line 5
-        :param ~digitalio.DigitalInOut db6: The data line 6
-        :param ~digitalio.DigitalInOut db7: The data line 7
-        :param columns: The columns on the charLCD
-        :param lines: The lines on the charLCD
-        :param ~pulseio.PWMOut, ~digitalio.DigitalInOut red: Red RGB Anode
-        :param ~pulseio.PWMOut, ~digitalio.DigitalInOut green: Green RGB Anode
-        :param ~pulseio.PWMOut, ~digitalio.DigitalInOut blue: Blue RGB Anode
-        :param ~digitalio.DigitalInOut read_write: The rw pin. Determines whether to read to or
-            write from the display. Not necessary if only writing to the display. Used on shield.
+    :param ~digitalio.DigitalInOut rs: The reset data line
+    :param ~digitalio.DigitalInOut en: The enable data line
+    :param ~digitalio.DigitalInOut db4: The data line 4
+    :param ~digitalio.DigitalInOut db5: The data line 5
+    :param ~digitalio.DigitalInOut db6: The data line 6
+    :param ~digitalio.DigitalInOut db7: The data line 7
+    :param columns: The columns on the charLCD
+    :param lines: The lines on the charLCD
+    :param ~pwmio.PWMOut, ~digitalio.DigitalInOut red: Red RGB Anode
+    :param ~pwmio.PWMOut, ~digitalio.DigitalInOut green: Green RGB Anode
+    :param ~pwmio.PWMOut, ~digitalio.DigitalInOut blue: Blue RGB Anode
+    :param ~digitalio.DigitalInOut read_write: The rw pin. Determines whether to read to or
+        write from the display. Not necessary if only writing to the display. Used on shield.
 
     """
+
     # pylint: disable-msg=too-many-arguments
-    def __init__(self, rs, en, db4, db5, db6, db7, columns, lines,
-                 red, green, blue, read_write=None):
+    def __init__(
+        self,
+        rs,
+        en,
+        db4,
+        db5,
+        db6,
+        db7,
+        columns,
+        lines,
+        red,
+        green,
+        blue,
+        read_write=None,
+    ):
 
         # Define read_write (rw) pin
         self.read_write = read_write
@@ -601,13 +656,13 @@ class Character_LCD_RGB(Character_LCD):
         self.rgb_led = [red, green, blue]
 
         for pin in self.rgb_led:
-            if hasattr(pin, 'direction'):
+            if hasattr(pin, "direction"):
                 # Assume a digitalio.DigitalInOut or compatible interface:
                 pin.direction = digitalio.Direction.OUTPUT
-            elif not hasattr(pin, 'duty_cycle'):
+            elif not hasattr(pin, "duty_cycle"):
                 raise TypeError(
-                    'RGB LED objects must be instances of digitalio.DigitalInOut'
-                    ' or pulseio.PWMOut, or provide a compatible interface.'
+                    "RGB LED objects must be instances of digitalio.DigitalInOut"
+                    " or pwmio.PWMOut, or provide a compatible interface."
                 )
 
         self._color = [0, 0, 0]
@@ -646,10 +701,10 @@ class Character_LCD_RGB(Character_LCD):
     def color(self, color):
         self._color = color
         for number, pin in enumerate(self.rgb_led):
-            if hasattr(pin, 'duty_cycle'):
-                # Assume a pulseio.PWMOut or compatible interface and set duty cycle:
+            if hasattr(pin, "duty_cycle"):
+                # Assume a pwmio.PWMOut or compatible interface and set duty cycle:
                 pin.duty_cycle = int(_map(color[number], 0, 100, 65535, 0))
-            elif hasattr(pin, 'value'):
+            elif hasattr(pin, "value"):
                 # If we don't have a PWM interface, all we can do is turn each color
                 # on / off.  Assume a DigitalInOut (or compatible interface) and write
                 # 0 (on) to pin for any value greater than 0, or 1 (off) for 0:

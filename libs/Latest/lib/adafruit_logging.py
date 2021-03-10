@@ -1,24 +1,7 @@
-# The MIT License (MIT)
+# SPDX-FileCopyrightText: 2019 Dave Astels for Adafruit Industries
 #
-# Copyright (c) 2019 Dave Astels for Adafruit Industries
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
+# SPDX-License-Identifier: MIT
+
 """
 `adafruit_logging`
 ================================================================================
@@ -40,24 +23,27 @@ Implementation Notes
   https://github.com/adafruit/circuitpython/releases
 
 """
-#pylint:disable=redefined-outer-name,consider-using-enumerate,no-self-use
-#pylint:disable=invalid-name
+# pylint:disable=redefined-outer-name,consider-using-enumerate,no-self-use
+# pylint:disable=invalid-name
 
 import time
 
-__version__ = "1.1.0"
+__version__ = "1.2.7"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_Logger.git"
 
 
-LEVELS = [(00, 'NOTSET'),
-          (10, 'DEBUG'),
-          (20, 'INFO'),
-          (30, 'WARNING'),
-          (40, 'ERROR'),
-          (50, 'CRITICAL')]
+LEVELS = [
+    (00, "NOTSET"),
+    (10, "DEBUG"),
+    (20, "INFO"),
+    (30, "WARNING"),
+    (40, "ERROR"),
+    (50, "CRITICAL"),
+]
 
 for value, name in LEVELS:
     globals()[name] = value
+
 
 def level_for(value):
     """Convert a numberic level to the most appropriate name.
@@ -68,11 +54,12 @@ def level_for(value):
     for i in range(len(LEVELS)):
         if value == LEVELS[i][0]:
             return LEVELS[i][1]
-        elif value < LEVELS[i][0]:
-            return LEVELS[i-1][1]
+        if value < LEVELS[i][0]:
+            return LEVELS[i - 1][1]
     return LEVELS[0][1]
 
-class LoggingHandler(object):
+
+class LoggingHandler:
     """Abstract logging message handler."""
 
     def format(self, level, msg):
@@ -82,7 +69,7 @@ class LoggingHandler(object):
         :param msg: the message to log
 
         """
-        return '{0}: {1} - {2}'.format(time.monotonic(), level_for(level), msg)
+        return "{0}: {1} - {2}".format(time.monotonic(), level_for(level), msg)
 
     def emit(self, level, msg):
         """Send a message where it should go.
@@ -105,9 +92,10 @@ class PrintHandler(LoggingHandler):
 
 
 # The level module-global variables get created when loaded
-#pylint:disable=undefined-variable
+# pylint:disable=undefined-variable
 
 logger_cache = dict()
+
 
 def getLogger(name):
     """Create or retrieve a logger by name.
@@ -119,7 +107,8 @@ def getLogger(name):
         logger_cache[name] = Logger()
     return logger_cache[name]
 
-class Logger(object):
+
+class Logger:
     """Provide a logging api."""
 
     def __init__(self):
@@ -138,6 +127,14 @@ class Logger(object):
 
         """
         self._level = value
+
+    def getEffectiveLevel(self):
+        """Get the effective level for this logger.
+
+        :return: the lowest level to output
+
+        """
+        return self._level
 
     def addHandler(self, hldr):
         """Sets the handler of this logger to the specified handler.

@@ -1,24 +1,7 @@
-# The MIT License (MIT)
+# SPDX-FileCopyrightText: 2017 Tony DiCola for Adafruit Industries
 #
-# Copyright (c) 2017 Tony DiCola for Adafruit Industries
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
+# SPDX-License-Identifier: MIT
+
 """
 `adafruit_tlc59711`
 ====================================================
@@ -41,28 +24,28 @@ Implementation Notes
 * Adafruit CircuitPython firmware for the ESP8622 and M0-based boards:
   https://github.com/adafruit/circuitpython/releases
 """
-__version__ = "1.1.2"
+__version__ = "1.2.6"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_TLC59711.git"
 
 
 # Globally disable invalid-name check as this chip by design has short channel
 # and register names.  It is confusing to rename these from what the datasheet
 # refers to them as.
-#pylint: disable=invalid-name
+# pylint: disable=invalid-name
 
 # Globally disable too many instance attributes check.  Again this is a case
 # where pylint doesn't have the right context to make this call.  The chip by
 # design has many channels which must be exposed.
-#pylint: disable=too-many-instance-attributes
+# pylint: disable=too-many-instance-attributes
 
 # Globally disable protected access.  Once again pylint can't figure out the
 # context for using internal decorate classes below.  In these cases protectected
 # access is by design for the internal class.
-#pylint: disable=protected-access
+# pylint: disable=protected-access
 
 # Yet another pylint issue, it fails to recognize a decorator class by
 # definition has no public methods.  Disable the check.
-#pylint: disable=too-few-public-methods
+# pylint: disable=too-few-public-methods
 
 
 def _shift_in(target_byte, val):
@@ -104,14 +87,15 @@ class TLC59711:
 
         def __get__(self, obj, obj_type):
             # Grab the 16-bit value at the offset for this channel.
-            return (obj._shift_reg[self._byte_offset] << 8) | \
-                    obj._shift_reg[self._byte_offset+1]
+            return (obj._shift_reg[self._byte_offset] << 8) | obj._shift_reg[
+                self._byte_offset + 1
+            ]
 
         def __set__(self, obj, val):
             # Set the 16-bit value at the offset for this channel.
             assert 0 <= val <= 65535
             obj._shift_reg[self._byte_offset] = (val >> 8) & 0xFF
-            obj._shift_reg[self._byte_offset+1] = val & 0xFF
+            obj._shift_reg[self._byte_offset + 1] = val & 0xFF
             # Write out the new values if auto_show is enabled.
             if obj.auto_show:
                 obj._write()
@@ -137,7 +121,6 @@ class TLC59711:
     b0 = _GS_Value(22)
     g0 = _GS_Value(24)
     r0 = _GS_Value(26)
-
 
     def __init__(self, spi, *, auto_show=True):
         self._spi = spi
@@ -174,7 +157,7 @@ class TLC59711:
             # Lock the SPI bus and configure it for the shift register.
             while not self._spi.try_lock():
                 pass
-            self._spi.configure(baudrate=10000000, polarity=0, phase=0)
+            self._spi.configure(baudrate=self._spi.frequency, polarity=0, phase=0)
             # Update the preamble of chip state in the first 4 bytes (32-bits)
             # with the write command, function control bits, and brightness
             # control register values.
@@ -213,7 +196,7 @@ class TLC59711:
 
     def show(self):
         """Write out the current LED PWM state to the chip.  This is only necessary if
-           auto_show was set to false in the initializer.
+        auto_show was set to false in the initializer.
         """
         self._write()
 
@@ -221,7 +204,7 @@ class TLC59711:
     @property
     def red_brightness(self):
         """The red brightness for all channels (i.e. R0, R1, R2, and R3).  This is a 7-bit
-           value from 0-127.
+        value from 0-127.
         """
         return self._bcr
 
@@ -235,7 +218,7 @@ class TLC59711:
     @property
     def green_brightness(self):
         """The green brightness for all channels (i.e. G0, G1, G2, and G3).  This is a
-           7-bit value from 0-127.
+        7-bit value from 0-127.
         """
         return self._bcg
 
@@ -249,7 +232,7 @@ class TLC59711:
     @property
     def blue_brightness(self):
         """The blue brightness for all channels (i.e. B0, B1, B2, and B3).  This is a 7-bit
-           value from 0-127.
+        value from 0-127.
         """
         return self._bcb
 
@@ -270,7 +253,7 @@ class TLC59711:
         # pylint: disable=no-else-return
         # Disable should be removed when refactor can be tested
         """Retrieve the R, G, B values for the provided channel as a
-           3-tuple. Each value is a 16-bit number from 0-65535.
+        3-tuple. Each value is a 16-bit number from 0-65535.
         """
         if key == 0:
             return (self.r0, self.g0, self.b0)
@@ -285,11 +268,11 @@ class TLC59711:
 
     def __setitem__(self, key, val):
         """Set the R, G, B values for the provided channel.  Specify a
-           3-tuple of R, G, B values that are each 16-bit numbers (0-65535).
+        3-tuple of R, G, B values that are each 16-bit numbers (0-65535).
         """
         assert 0 <= key <= 3  # Do this check here instead of later to
-                              # prevent accidentally keeping auto_show
-                              # turned off when a bad key is provided.
+        # prevent accidentally keeping auto_show
+        # turned off when a bad key is provided.
         assert len(val) == 3
         assert 0 <= val[0] <= 65535
         assert 0 <= val[1] <= 65535

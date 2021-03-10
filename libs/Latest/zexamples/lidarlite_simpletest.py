@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2021 ladyada for Adafruit Industries
+# SPDX-License-Identifier: MIT
+
 import time
 import board
 import busio
@@ -11,9 +14,9 @@ i2c = busio.I2C(board.SCL, board.SDA)
 sensor = adafruit_lidarlite.LIDARLite(i2c)
 
 # Optionally, we can pass in a hardware reset pin, or custom config
-#import digitalio
-#reset = digitalio.DigitalInOut(board.D5)
-#sensor = adafruit_lidarlite.LIDARLite(i2c, reset_pin=reset,
+# import digitalio
+# reset = digitalio.DigitalInOut(board.D5)
+# sensor = adafruit_lidarlite.LIDARLite(i2c, reset_pin=reset,
 #    configuration=adafruit_lidarlite.CONFIG_MAXRANGE)
 
 # If you want to reset, you can do so, note that it can take 10-20 seconds
@@ -27,4 +30,4 @@ while True:
     except RuntimeError as e:
         # If we get a reading error, just print it and keep truckin'
         print(e)
-    time.sleep(0.01) # you can remove this for ultra-fast measurements!
+    time.sleep(0.01)  # you can remove this for ultra-fast measurements!

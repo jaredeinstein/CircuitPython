@@ -1,24 +1,7 @@
-# The MIT License (MIT)
+# SPDX-FileCopyrightText: 2018 ladyada for Adafruit Industries
 #
-# Copyright (c) 2018 ladyada for Adafruit Industries
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
+# SPDX-License-Identifier: MIT
+
 """
 `adafruit_tfmini`
 ====================================================
@@ -42,17 +25,18 @@ Implementation Notes
 import time
 import struct
 
-__version__ = "1.1.1"
+__version__ = "1.2.5"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_TFmini.git"
 
-_STARTCONFIG = b'\x42\x57\x02\x00\x00\x00\x01\x02'
-_STARTREPLY = b'\x57\x02\x01\x00\x00\x01\x02'  # minus header 0x42
-_CONFIGPARAM = b'\x42\x57\x02\x00'
-_ENDCONFIG = b'\x42\x57\x02\x00\x00\x00\x00\x02'
-_ENDREPLY = b'\x42\x57\x02\x01\x00\x00\x00\x02'
+_STARTCONFIG = b"\x42\x57\x02\x00\x00\x00\x01\x02"
+_STARTREPLY = b"\x57\x02\x01\x00\x00\x01\x02"  # minus header 0x42
+_CONFIGPARAM = b"\x42\x57\x02\x00"
+_ENDCONFIG = b"\x42\x57\x02\x00\x00\x00\x00\x02"
+_ENDREPLY = b"\x42\x57\x02\x01\x00\x00\x00\x02"
 
 MODE_SHORT = 2
 MODE_LONG = 7
+
 
 class TFmini:
     """TF mini communication module, use with just RX or TX+RX for advanced
@@ -87,7 +71,9 @@ class TFmini:
             # get remaining packet
             data = self._uart.read(8)
             # check first byte is magicbyte
-            frame, dist, self._strength, self._mode, _, checksum = struct.unpack("<BHHBBB", data)
+            frame, dist, self._strength, self._mode, _, checksum = struct.unpack(
+                "<BHHBBB", data
+            )
             # look for second 0x59 frame indicator
             if frame != 0x59:
                 continue
@@ -127,24 +113,24 @@ class TFmini:
             if not x or x[0] != 0x42:
                 continue
             echo = self._uart.read(len(_STARTREPLY))
-            #print("start ", [hex(i) for i in echo])
+            # print("start ", [hex(i) for i in echo])
             if echo != _STARTREPLY:
                 raise RuntimeError("Did not receive config start echo")
             break
 
         # Finally, send the command
         self._uart.write(command)
-        #print([hex(i) for i in command])
+        # print([hex(i) for i in command])
         echo = self._uart.read(len(command))
         cmdreply = bytearray(len(command))
         cmdreply[:] = command
         cmdreply[3] = 0x1
-        #print("cmd ", [hex(i) for i in echo])
+        # print("cmd ", [hex(i) for i in echo])
         if echo != cmdreply:
             raise RuntimeError("Did not receive config command echo")
 
         self._uart.write(_ENDCONFIG)
         echo = self._uart.read(len(_ENDREPLY))
-        #print("end ", [hex(i) for i in echo])
+        # print("end ", [hex(i) for i in echo])
         if echo != _ENDREPLY:
             raise RuntimeError("Did not receive config end echo")

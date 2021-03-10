@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2021 ladyada for Adafruit Industries
+# SPDX-License-Identifier: MIT
+
 import time
 import digitalio
 import board
@@ -12,10 +15,7 @@ rows = [digitalio.DigitalInOut(x) for x in (board.D13, board.D12, board.D11, boa
 # cols = [digitalio.DigitalInOut(x) for x in (board.D11, board.D13, board.D9)]
 # rows = [digitalio.DigitalInOut(x) for x in (board.D12, board.D5, board.D6, board.D10)]
 
-keys = ((1, 2, 3),
-        (4, 5, 6),
-        (7, 8, 9),
-        ('*', 0, '#'))
+keys = ((1, 2, 3), (4, 5, 6), (7, 8, 9), ("*", 0, "#"))
 
 keypad = adafruit_matrixkeypad.Matrix_Keypad(rows, cols, keys)
 

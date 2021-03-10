@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2021 ladyada for Adafruit Industries
+# SPDX-License-Identifier: MIT
+
 ## Simple Example For CircuitPython/Python SPI FRAM Library
 
 import board
@@ -24,6 +27,6 @@ print(fram[0])
 ##       a buffer the size of 'length', which may cause
 ##       problems on memory-constrained platforms.
 
-#values = list(range(100)) # or bytearray or tuple
-#fram[0] = values
-#print(fram[0:99])
+# values = list(range(100)) # or bytearray or tuple
+# fram[0] = values
+# print(fram[0:99])

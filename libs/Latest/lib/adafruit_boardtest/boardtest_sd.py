@@ -1,24 +1,7 @@
-# The MIT License (MIT)
+# SPDX-FileCopyrightText: 2018 Shawn Hymel for Adafruit Industries
 #
-# Copyright (c) 2018 Shawn Hymel for Adafruit Industries
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
+# SPDX-License-Identifier: MIT
+
 """
 `adafruit_boardtest.boardtest_sd`
 ====================================================
@@ -48,36 +31,39 @@ Implementation Notes
 """
 import random
 
-import adafruit_sdcard
 import board
 import busio
 import digitalio
+import adafruit_sdcard
 import storage
 
-__version__ = "1.0.1"
+__version__ = "1.2.5"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_BoardTest.git"
 
 # Constants
-MOSI_PIN_NAME = 'SD_MOSI'
-MISO_PIN_NAME = 'SD_MISO'
-SCK_PIN_NAME = 'SD_SCK'
-CS_PIN_NAME = 'SD_CS'
-FILENAME = "test.txt"       # File that will be written to
-BAUD_RATE = 100000          # Bits per second
-NUM_UART_BYTES = 40         # Number of bytes to transmit over UART
-ASCII_MIN = 0x21            # '!' Lowest ASCII char in random range (inclusive)
-ASCII_MAX = 0x7E            # '~' Highest ASCII char in random range (inclusive)
+MOSI_PIN_NAME = "SD_MOSI"
+MISO_PIN_NAME = "SD_MISO"
+SCK_PIN_NAME = "SD_SCK"
+CS_PIN_NAME = "SD_CS"
+FILENAME = "test.txt"  # File that will be written to
+BAUD_RATE = 100000  # Bits per second
+NUM_UART_BYTES = 40  # Number of bytes to transmit over UART
+ASCII_MIN = 0x21  # '!' Lowest ASCII char in random range (inclusive)
+ASCII_MAX = 0x7E  # '~' Highest ASCII char in random range (inclusive)
 
 # Test result strings
 PASS = "PASS"
 FAIL = "FAIL"
 NA = "N/A"
 
-def run_test(pins,
-             mosi_pin=MOSI_PIN_NAME,
-             miso_pin=MISO_PIN_NAME,
-             sck_pin=SCK_PIN_NAME,
-             cs_pin=CS_PIN_NAME):
+
+def run_test(
+    pins,
+    mosi_pin=MOSI_PIN_NAME,
+    miso_pin=MISO_PIN_NAME,
+    sck_pin=SCK_PIN_NAME,
+    cs_pin=CS_PIN_NAME,
+):
 
     """
     Performs random writes and reads to file on attached SD card.
@@ -96,8 +82,7 @@ def run_test(pins,
 
         # Tell user to connect SD card
         print("Insert SD card into holder and connect SPI lines to holder.")
-        print("Connect " + cs_pin + " to the CS (DAT3) pin on the SD " +
-              "card holder.")
+        print("Connect " + cs_pin + " to the CS (DAT3) pin on the SD " + "card holder.")
         print("WARNING: " + FILENAME + " will be created or overwritten.")
         print("Press enter to continue.")
         input()
@@ -108,9 +93,11 @@ def run_test(pins,
         csel.value = True
 
         # Set up SPI
-        spi = busio.SPI(getattr(board, sck_pin),
-                        MOSI=getattr(board, mosi_pin),
-                        MISO=getattr(board, miso_pin))
+        spi = busio.SPI(
+            getattr(board, sck_pin),
+            MOSI=getattr(board, mosi_pin),
+            MISO=getattr(board, miso_pin),
+        )
 
         # Try to connect to the card and mount the filesystem
         try:
@@ -160,23 +147,25 @@ def run_test(pins,
     print("No SD card pins found")
     return NA, []
 
+
 def _main():
 
     # List out all the pins available to us
-    pins = [p for p in dir(board)]
+    pins = list(dir(board))
     print()
-    print("All pins found:", end=' ')
+    print("All pins found:", end=" ")
 
     # Print pins
     for pin in pins:
-        print(pin, end=' ')
-    print('\n')
+        print(pin, end=" ")
+    print("\n")
 
     # Run test
     result = run_test(pins)
     print()
     print(result[0])
     print("Pins tested: " + str(result[1]))
+
 
 # Execute only if run as main.py or code.py
 if __name__ == "__main__":

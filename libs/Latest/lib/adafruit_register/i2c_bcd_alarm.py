@@ -1,24 +1,6 @@
-# The MIT License (MIT)
+# SPDX-FileCopyrightText: 2016 Scott Shawcroft for Adafruit Industries
 #
-# Copyright (c) 2016 Scott Shawcroft for Adafruit Industries
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
+# SPDX-License-Identifier: MIT
 # pylint: disable=too-few-public-methods
 
 """
@@ -30,10 +12,11 @@ Binary Coded Decimal alarm register
 * Author(s): Scott Shawcroft
 """
 
-__version__ = "1.7.0"
+__version__ = "1.9.5"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_Register.git"
 
 import time
+
 
 def _bcd2bin(value):
     """Convert binary coded decimal to Binary
@@ -50,8 +33,10 @@ def _bin2bcd(value):
     """
     return value + 6 * (value // 10)
 
+
 ALARM_COMPONENT_DISABLED = 0x80
 FREQUENCY = ["secondly", "minutely", "hourly", "daily", "weekly", "monthly"]
+
 
 class BCDAlarmTimeRegister:
     """
@@ -80,8 +65,11 @@ class BCDAlarmTimeRegister:
     :param int weekday_start: 0 or 1 depending on the RTC's representation of the first day of the
       week (Monday)
     """
+
     # Defaults are based on alarm1 of the DS3231.
-    def __init__(self, register_address, has_seconds=True, weekday_shared=True, weekday_start=1):
+    def __init__(
+        self, register_address, has_seconds=True, weekday_shared=True, weekday_start=1
+    ):
         buffer_size = 5
         if weekday_shared:
             buffer_size -= 1
@@ -95,9 +83,8 @@ class BCDAlarmTimeRegister:
 
     def __get__(self, obj, objtype=None):
         # Read the alarm register.
-        with obj.i2c_device:
-            obj.i2c_device.write(self.buffer, end=1, stop=False)
-            obj.i2c_device.readinto(self.buffer, start=1)
+        with obj.i2c_device as i2c:
+            i2c.write_then_readinto(self.buffer, self.buffer, out_end=1, in_start=1)
 
         frequency = None
         i = 1
@@ -107,17 +94,17 @@ class BCDAlarmTimeRegister:
                 frequency = "secondly"
             else:
                 frequency = "minutely"
-                seconds = _bcd2bin(self.buffer[1] & 0x7f)
+                seconds = _bcd2bin(self.buffer[1] & 0x7F)
             i = 2
         minute = 0
         if (self.buffer[i] & 0x80) == 0:
             frequency = "hourly"
-            minute = _bcd2bin(self.buffer[i] & 0x7f)
+            minute = _bcd2bin(self.buffer[i] & 0x7F)
 
         hour = 0
         if (self.buffer[i + 1] & 0x80) == 0:
             frequency = "daily"
-            hour = _bcd2bin(self.buffer[i + 1] & 0x7f)
+            hour = _bcd2bin(self.buffer[i + 1] & 0x7F)
 
         mday = None
         wday = None
@@ -125,15 +112,15 @@ class BCDAlarmTimeRegister:
             # day of the month
             if not self.weekday_shared or (self.buffer[i + 2] & 0x40) == 0:
                 frequency = "monthly"
-                mday = _bcd2bin(self.buffer[i + 2] & 0x3f)
-            else: # weekday
+                mday = _bcd2bin(self.buffer[i + 2] & 0x3F)
+            else:  # weekday
                 frequency = "weekly"
-                wday = _bcd2bin(self.buffer[i + 2] & 0x3f) - self.weekday_start
+                wday = _bcd2bin(self.buffer[i + 2] & 0x3F) - self.weekday_start
 
         # weekday
         if not self.weekday_shared and (self.buffer[i + 3] & 0x80) == 0:
             frequency = "monthly"
-            mday = _bcd2bin(self.buffer[i + 3] & 0x7f)
+            mday = _bcd2bin(self.buffer[i + 3] & 0x7F)
 
         if mday is not None:
             wday = (mday - 2) % 7
@@ -144,7 +131,10 @@ class BCDAlarmTimeRegister:
             wday = 6
             mday = 1
 
-        return (time.struct_time((2017, 1, mday, hour, minute, seconds, wday, mday, -1)), frequency)
+        return (
+            time.struct_time((2017, 1, mday, hour, minute, seconds, wday, mday, -1)),
+            frequency,
+        )
 
     def __set__(self, obj, value):
         if len(value) != 2:
@@ -164,18 +154,20 @@ class BCDAlarmTimeRegister:
         # i is the index of the minute byte
         i = 2 if self.has_seconds else 1
 
-        if frequency > 0 and self.has_seconds: # minutely at least
+        if frequency > 0 and self.has_seconds:  # minutely at least
             self.buffer[1] = _bin2bcd(value[0].tm_sec)
 
-        if frequency > 1: # hourly at least
+        if frequency > 1:  # hourly at least
             self.buffer[i] = _bin2bcd(value[0].tm_min)
 
-        if frequency > 2: # daily at least
+        if frequency > 2:  # daily at least
             self.buffer[i + 1] = _bin2bcd(value[0].tm_hour)
 
         if value[1] == "weekly":
             if self.weekday_shared:
-                self.buffer[i + 2] = _bin2bcd(value[0].tm_wday + self.weekday_start) | 0x40
+                self.buffer[i + 2] = (
+                    _bin2bcd(value[0].tm_wday + self.weekday_start) | 0x40
+                )
             else:
                 self.buffer[i + 3] = _bin2bcd(value[0].tm_wday + self.weekday_start)
         elif value[1] == "monthly":

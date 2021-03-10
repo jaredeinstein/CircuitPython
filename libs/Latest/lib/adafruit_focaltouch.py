@@ -1,24 +1,7 @@
-# The MIT License (MIT)
+# SPDX-FileCopyrightText: 2017 ladyada for Adafruit Industries
 #
-# Copyright (c) 2017 ladyada for adafruit industries
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
+# SPDX-License-Identifier: MIT
+
 """
 `adafruit_focaltouch`
 ====================================================
@@ -49,7 +32,7 @@ Implementation Notes
 
 # imports
 
-__version__ = "1.1.3"
+__version__ = "1.2.6"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_FocalTouch.git"
 
 try:
@@ -75,6 +58,7 @@ _FT6XXX_REG_FIRMVERS = const(0xA6)
 _FT6XXX_REG_VENDID = const(0xA8)
 _FT6XXX_REG_RELEASE = const(0xAF)
 
+
 class Adafruit_FocalTouch:
     """
     A driver for the FocalTech capacitive touch sensor.
@@ -83,12 +67,17 @@ class Adafruit_FocalTouch:
     _debug = False
     chip = None
 
-    def __init__(self, i2c, address=_FT6206_DEFAULT_I2C_ADDR, debug=False):
+    def __init__(
+        self, i2c, address=_FT6206_DEFAULT_I2C_ADDR, debug=False, irq_pin=None
+    ):
         self._i2c = I2CDevice(i2c, address)
         self._debug = debug
+        self._irq_pin = irq_pin
 
-        chip_data = self._read(_FT6XXX_REG_LIBH, 9)
-        lib_ver, chip_id, _, _, firm_id, _, vend_id = struct.unpack('>HBBBBBB', chip_data)
+        chip_data = self._read(_FT6XXX_REG_LIBH, 8)  # don't wait for IRQ
+        lib_ver, chip_id, _, _, firm_id, _, vend_id = struct.unpack(
+            ">HBBBBBB", chip_data
+        )
 
         if vend_id != 0x11:
             raise RuntimeError("Did not find FT chip")
@@ -107,8 +96,7 @@ class Adafruit_FocalTouch:
     @property
     def touched(self):
         """ Returns the number of touches currently detected """
-        return self._read(_FT6XXX_REG_NUMTOUCHES, 1)[0]
-
+        return self._read(_FT6XXX_REG_NUMTOUCHES, 1, irq_pin=self._irq_pin)[0]
 
     # pylint: disable=unused-variable
     @property
@@ -118,28 +106,35 @@ class Adafruit_FocalTouch:
         touch coordinates, and 'id' as the touch # for multitouch tracking
         """
         touchpoints = []
-        data = self._read(_FT6XXX_REG_DATA, 32)
+        data = self._read(_FT6XXX_REG_DATA, 32, irq_pin=self._irq_pin)
 
         for i in range(2):
-            point_data = data[i*6+3 : i*6+9]
+            point_data = data[i * 6 + 3 : i * 6 + 9]
             if all([i == 0xFF for i in point_data]):
                 continue
-            #print([hex(i) for i in point_data])
-            x, y, weight, misc = struct.unpack('>HHBB', point_data)
-            #print(x, y, weight, misc)
+            # print([hex(i) for i in point_data])
+            x, y, weight, misc = struct.unpack(">HHBB", point_data)
+            # print(x, y, weight, misc)
             touch_id = y >> 12
             x &= 0xFFF
             y &= 0xFFF
-            point = {'x':x, 'y':y, 'id':touch_id}
+            point = {"x": x, "y": y, "id": touch_id}
             touchpoints.append(point)
         return touchpoints
+
     # pylint: enable=unused-variable
 
-    def _read(self, register, length):
+    def _read(self, register, length, irq_pin=None):
         """Returns an array of 'length' bytes from the 'register'"""
         with self._i2c as i2c:
+
+            if irq_pin is not None:
+                while irq_pin.value:
+                    pass
+
             i2c.write(bytes([register & 0xFF]))
             result = bytearray(length)
+
             i2c.readinto(result)
             if self._debug:
                 print("\t$%02X => %s" % (register, [hex(i) for i in result]))
@@ -148,7 +143,7 @@ class Adafruit_FocalTouch:
     def _write(self, register, values):
         """Writes an array of 'length' bytes to the 'register'"""
         with self._i2c as i2c:
-            values = [(v & 0xFF) for v in [register]+values]
+            values = [(v & 0xFF) for v in [register] + values]
             i2c.write(bytes(values))
             if self._debug:
                 print("\t$%02X <= %s" % (values[0], [hex(i) for i in values[1:]]))
