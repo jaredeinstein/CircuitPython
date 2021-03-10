@@ -3,8 +3,8 @@
 
 """Simple test for 16x2 character lcd connected to an MCP23008 I2C LCD backpack."""
 import time
-import board
-import busio
+import board  # pylint: disable=import-error
+import busio  # pylint: disable=import-error
 import adafruit_character_lcd.character_lcd_i2c as character_lcd
 
 # Modify this if you have a different sized Character LCD
