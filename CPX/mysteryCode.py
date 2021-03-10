@@ -67,7 +67,7 @@ while True:
             cpx.stop_tone()
             cpx.start_tone(200 + (i*25))
             cpx.pixels.brightness = (pixelMaxBrightness * (i/5))
-            time.sleep(.20)
+            time.sleep(.10)
         cpx.stop_tone()
         setup = 1
 
